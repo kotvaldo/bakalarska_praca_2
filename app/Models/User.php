@@ -23,6 +23,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'profile_photo',
+        'role',
     ];
 
     /**
@@ -43,14 +45,8 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
-        'created_at' => 'datetime'
+        'created_at' => 'datetime',
     ];
-
-    /**
-     * Set query filters
-     *
-     * Overwrite this method in the model to set query filters
-     */
     public function setFilters()
     {
         $this->filter->like('name')
@@ -59,10 +55,6 @@ class User extends Authenticatable
             ->like('created_at');
     }
 
-    /**
-     * Accessor for created_at attribute
-     * @return Attribute
-     */
     protected function createdAt(): Attribute
     {
         return Attribute::make(
