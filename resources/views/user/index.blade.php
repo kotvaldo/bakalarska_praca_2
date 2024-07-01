@@ -20,9 +20,6 @@
                         </div>
                     @endcan
                 </div>
-                <div class="row">
-                    {!! $grid->show() !!}
-                </div>
             </div>
         </div>
     </div>
