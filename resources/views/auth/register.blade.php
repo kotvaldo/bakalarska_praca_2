@@ -1,7 +1,8 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
+    <link rel="stylesheet" href="{{ asset('css/login.css') }}">
+    <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card">
@@ -66,6 +67,10 @@
                                 <button type="submit" class="btn btn-primary">
                                     {{ __('Register') }}
                                 </button>
+                                <label class="have_account">Already have account?</label>
+                                <a class="btn btn-link" href="{{ route('login') }}">
+                                    {{ __("Sign in") }}
+                                </a>
                             </div>
                         </div>
                     </form>

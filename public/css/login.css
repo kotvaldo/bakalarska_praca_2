@@ -1,0 +1,69 @@
+.card {
+    border: 1px solid #ccc;
+    border-radius: 7px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    background-color: #4c4e54;
+    color: #fff;
+    border-bottom: 1px solid #000000;
+    font-weight: bold;
+    text-align: center;
+    font-size: large;
+}
+
+.card-body {
+    padding: 20px;
+}
+
+.form-control {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.btn-primary {
+    background-color: #3490dc;
+    border: 1px solid #3490dc;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 4px;
+    font-weight: bolder;
+}
+
+.btn-primary:hover {
+    background-color: #217ebf;
+    border: 1px solid #217ebf;
+    color: #fff;
+}
+
+.btn-link {
+    color: #3490dc;
+    font-weight: bold;
+}
+
+.btn-link:hover {
+    text-decoration: underline;
+}
+
+label {
+    font-weight: bolder;
+    color: #696565;
+
+
+}
+.form-check-input {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+}
+
+.have_account {
+    margin-left: 10px;
+}
+
+.register-button {
+    margin-top: 10px;
+
+
+}

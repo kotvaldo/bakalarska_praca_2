@@ -123,7 +123,7 @@
         </li>
         @guest
             <li>
-                <a href="{{route('home')}}">Auth</a>
+                <a href="{{route('login')}}">Auth</a>
             </li>
         @else
             <li>
