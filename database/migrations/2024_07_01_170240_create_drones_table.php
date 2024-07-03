@@ -16,9 +16,9 @@ return new class extends Migration
             $table->string('name');
             $table->string('type');
             $table->string('serial_number');
-            $table->unsignedBigInteger('mission_id')->nullable();
+            $table->unsignedBigInteger('mission_id')->nullable()->default(null);
             $table->foreign('mission_id')->references('id')->on('missions');
-            $table->string('image')->nullable()->default(null);
+            $table->string('image')->nullable();
             $table->timestamps();
         });
     }

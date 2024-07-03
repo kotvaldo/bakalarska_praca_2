@@ -2,10 +2,13 @@
 
 namespace App\Models;
 
+use Aginev\SearchFilters\Filterable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 class Mission extends Model
 {
-    use HasFactory;
+    use HasApiTokens, HasFactory, Notifiable, Filterable;
 }

@@ -16,7 +16,14 @@ class Drone extends Model
         'name',
         'type',
         'serial_number',
+        'mission_id'
     ];
-
+    public function setFilters()
+    {
+        $this->filter->like('name')
+            ->like('type')
+            ->like('serial_number')
+            ->like('mission_id');
+    }
 
 }

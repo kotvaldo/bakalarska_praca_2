@@ -15,7 +15,12 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users');
-
+            $table->string("name");
+            $table->boolean("active")->default(true);
+            $table->double("p0")->default(0);
+            $table->double("p1")->default(0);
+            $table->double("p2")->default(0);
+            $table->integer("w")->default(0);
             $table->timestamps();
         });
     }

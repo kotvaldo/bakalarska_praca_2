@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DroneController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -27,4 +28,6 @@ Route::get('/home', [HomeController::class, 'index'])->name('home');
 Route::group(['middleware' => ['auth']], function () {
     Route::resource('user', UserController::class);
     Route::get('/user/{user}/delete', [UserController::class, 'destroy'])->name('user.delete');
+    Route::resource('drone', DroneController::class);
 });
+
