@@ -27,7 +27,8 @@ return new class extends Migration
             $table->integer("z2")->default(0);
             $table->integer("zn")->default(0);
             $table->boolean("automatic")->default(false);
-            $table->integer("active_drones_count")->default(0);
+            $table->integer("total_cp_count")->nullable()->default(0);
+            $table->integer("drones_count")->default(0);
             $table->timestamps();
         });
     }
