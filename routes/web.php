@@ -29,5 +29,6 @@ Route::group(['middleware' => ['auth']], function () {
     Route::resource('user', UserController::class);
     Route::get('/user/{user}/delete', [UserController::class, 'destroy'])->name('user.delete');
     Route::resource('drone', DroneController::class);
+    Route::get('/drone/{drone}/delete', [DroneController::class, 'destroy'])->name('drone.delete');
 });
 

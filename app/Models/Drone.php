@@ -26,4 +26,9 @@ class Drone extends Model
             ->like('mission_id');
     }
 
+    public function getMissionIdAttribute($value)
+    {
+        return $value ?: 'None';
+    }
+
 }

@@ -20,10 +20,13 @@ class DroneFactory extends Factory
      */
     public function definition() : array
     {
+        $types = ['IMAGE', 'SIGNAL', 'NUMBER'];
+
         return [
             'name' => $this->faker->word,
-            'type' => $this->faker->word,
-            'serial_number' => Str::random(10),
+            'type' => $this->faker->randomElement($types),
+            'serial_number' => $this->faker->unique()->numerify('SN############'),
         ];
     }
+
 }

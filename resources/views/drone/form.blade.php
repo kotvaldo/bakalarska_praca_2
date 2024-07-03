@@ -21,7 +21,7 @@
 
     <div class="form-group mb-2">
         <label for="description">Serial Number <span style="color: red">*</span></label>
-        <input class="form-control" id="serial_number" name="serial_number" placeholder="Enter Serial Number:">{{ old('description', @$model->serial_number) }}</input>
+        <input class="form-control" id="serial_number" name="serial_number" placeholder="Enter Serial Number:" value=" {{ old('description', @$model->serial_number) }} ">
     </div>
 
     <div class="form-group mb-2">

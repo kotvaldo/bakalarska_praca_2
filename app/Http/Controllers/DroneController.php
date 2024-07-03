@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Aginev\Datagrid\Datagrid;
 use App\Models\Drone;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DroneController extends Controller
 {
@@ -19,7 +20,17 @@ class DroneController extends Controller
             ->setColumn('serial_number', 'Serial Number', ['sortable' => true, 'has_filters' => true])
             ->setColumn('mission_id', 'Mission', [
                 'sortable' => true,
-                'has_filters' => true
+                'has_filters' => true,
+                'display' => function($row) {
+                    return $row->mission_id ?: 'None';
+                }
+
+            ])
+            ->setActionColumn([
+                'wrapper' => function ($value, $row) {
+                    return (Auth::user()->can('update', $row->getData()) ? '<a href="' . route('drone.edit', [$row->id]) . '" title="Edit" class="btn btn-sm btn-primary"><i class="bi bi-pencil-square"></i></a> ' : '') .
+                        (Auth::user()->can('delete', $row->getData()) ? '<a href="' . route('drone.delete', $row->id) . '" title="Delete" class="btn btn-sm btn-danger" onclick="return confirm(\'Are you sure ?\')"><i class="bi bi-trash"></i></a>' : '');
+                }
             ]);
         return view('drone.index', [
             'grid' => $grid
@@ -28,7 +39,7 @@ class DroneController extends Controller
 
 
     public function create() {
-        $droneTypes = ['IMAGE', 'TEXT', 'NUMBER'];
+        $droneTypes = ['IMAGE', 'SIGNAL', 'NUMBER'];
         return view('drone.create', [
             'action' => route('drone.store'),
             'method' => 'post',
@@ -60,6 +71,61 @@ class DroneController extends Controller
         $drone->save();
 
         return redirect()->route('drone.index')->with('alert', 'Drone was successfully created!');
+    }
+
+    public function edit(Drone $drone)
+    {
+        $droneTypes = ['IMAGE', 'SIGNAL', 'NUMBER'];
+        return view('drone.edit', [
+            'action' => route('drone.update', $drone->id),
+            'method' => 'put',
+            'model' => $drone,
+            'droneTypes' => $droneTypes
+
+        ]);
+
+    }
+    public function update(Request $request, Drone $drone)
+    {
+        $request->validate([
+            'name' => 'required',
+            'serial_number' => 'required',
+            'type' => 'required',
+            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+        ]);
+
+        $oldImage = null;
+        $avatarName = null;
+
+        if ($request->hasFile('image')) {
+            $oldImage = $drone->image;
+            $avatarName = time() . '.' . $request->image->getClientOriginalExtension();
+            $request->image->move(public_path('images'), $avatarName);
+
+        }
+
+        $drone->update($request->all());
+        $drone->update(['image' => $avatarName]);
+
+        if ($oldImage) {
+            $oldImagePath = public_path('images') . '/' . $oldImage;
+            if (file_exists($oldImagePath)) {
+                unlink($oldImagePath);
+            }
+        }
+    }
+    public function destroy(Drone $drone)
+    {
+        $oldImage = $drone->image;
+        if ($oldImage) {
+            $oldImagePath = public_path('images') . '/' . $oldImage;
+            if (file_exists($oldImagePath)) {
+                unlink($oldImagePath);
+            }
+        }
+        $drone->delete();
+
+        return redirect()->route('drone.index')->with('alert', 'Drone was successfully removed!');
     }
 
 }

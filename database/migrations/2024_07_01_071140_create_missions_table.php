@@ -20,7 +20,14 @@ return new class extends Migration
             $table->double("p0")->default(0);
             $table->double("p1")->default(0);
             $table->double("p2")->default(0);
+            $table->double("pn")->default(0);
             $table->integer("w")->default(0);
+            $table->integer("z0")->default(0);
+            $table->integer("z1")->default(0);
+            $table->integer("z2")->default(0);
+            $table->integer("zn")->default(0);
+            $table->boolean("automatic")->default(false);
+            $table->integer("active_drones_count")->default(0);
             $table->timestamps();
         });
     }

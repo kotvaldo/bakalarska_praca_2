@@ -13,7 +13,7 @@ class MissionPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -21,7 +21,7 @@ class MissionPolicy
      */
     public function view(User $user, Mission $mission): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -29,7 +29,7 @@ class MissionPolicy
      */
     public function create(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -37,7 +37,7 @@ class MissionPolicy
      */
     public function update(User $user, Mission $mission): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -45,7 +45,7 @@ class MissionPolicy
      */
     public function delete(User $user, Mission $mission): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -53,7 +53,7 @@ class MissionPolicy
      */
     public function restore(User $user, Mission $mission): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -61,6 +61,6 @@ class MissionPolicy
      */
     public function forceDelete(User $user, Mission $mission): bool
     {
-        //
+        return true;
     }
 }

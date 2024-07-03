@@ -12,9 +12,12 @@ return new class extends Migration {
     {
         Schema::create('control_points', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
+            $table->string("data_type");
+            $table->integer('latitude');
+            $table->integer('longitude');
             $table->unsignedBigInteger('drone_id')->nullable();
             $table->foreign('drone_id')->references('id')->on('drones');
+            $table->timestamps();
         });
     }
 

@@ -21,7 +21,7 @@ class DronePolicy
      */
     public function view(User $user, Drone $drone): bool
     {
-
+        return true;
     }
 
     /**
@@ -37,7 +37,7 @@ class DronePolicy
      */
     public function update(User $user, Drone $drone): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -45,7 +45,7 @@ class DronePolicy
      */
     public function delete(User $user, Drone $drone): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -53,7 +53,7 @@ class DronePolicy
      */
     public function restore(User $user, Drone $drone): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -61,6 +61,6 @@ class DronePolicy
      */
     public function forceDelete(User $user, Drone $drone): bool
     {
-        //
+        return true;
     }
 }

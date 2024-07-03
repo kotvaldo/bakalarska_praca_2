@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Drone;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -16,8 +17,21 @@ class ControlPointFactory extends Factory
      */
     public function definition(): array
     {
+        $types = ['IMAGE', 'SIGNAL', 'NUMBER'];
         return [
-            //
+            'data_type' => $this->faker->randomElement($types),
+            'drone_id' => $this->getRandomDroneId(),
+            'latitude' => $this->faker->latitude,
+            'longitude' => $this->faker->longitude,
         ];
+    }
+
+    private function getRandomDroneId()
+    {
+        if ($this->faker->boolean(25)) {
+            $drone = Drone::inRandomOrder()->first();
+            return $drone ? $drone->id : null;
+        }
+        return null;
     }
 }
