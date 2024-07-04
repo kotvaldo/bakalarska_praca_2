@@ -136,4 +136,10 @@ class DroneController extends Controller
 
         return redirect()->route('drone.index')->with('alert', 'Drone was successfully removed!');
     }
+    public function async(Mission $mission)
+    {
+        $drones = Drone::where('mission_id', $mission->id)->get();
+        return view('partials.drones', compact('drones', 'mission'));
+    }
+
 }

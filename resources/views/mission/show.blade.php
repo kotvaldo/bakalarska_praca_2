@@ -6,90 +6,117 @@
         <h1>{{ $mission->name }}</h1>
         <p>{{ $mission->description }}</p>
 
-        <h2>Drones</h2>
-        <ul>
-            @foreach($drones as $drone)
-                <li>{{ $drone->name }}</li>
-            @endforeach
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link active" href="#" data-section="data-records-section">Data Records</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-section="drones-section">Drones</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-section="control-points-section">Control Points</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="#" data-section="statistics-section">Statistics</a>
+            </li>
         </ul>
 
-        <h2>Data Records</h2>
-        <table id="data-records-table">
-            <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Description</th>
-                <th>Action</th>
-            </tr>
-            </thead>
-            <tbody>
+        <div id="data-records-section" class="page-section active">
             <!-- Data records will be loaded here asynchronously -->
-            </tbody>
-        </table>
+        </div>
 
-        <h2>Create New Data Record</h2>
-        <form id="create-data-record-form">
-            @csrf
-            <div>
-                <label for="name">Name:</label>
-                <input type="text" id="name" name="name" required>
-            </div>
-            <div>
-                <label for="description">Description:</label>
-                <textarea id="description" name="description" required></textarea>
-            </div>
-            <input type="hidden" name="mission_id" value="{{ $mission->id }}">
-            <button type="submit">Create</button>
-        </form>
+        <div id="drones-section" class="page-section">
+            <!-- Drones will be loaded here asynchronously -->
+        </div>
 
-        <h2>Statistics</h2>
-        <!-- Add your statistics calculations and display here -->
+        <div id="control-points-section" class="page-section">
+            <!-- Control points will be loaded here asynchronously -->
+        </div>
+
+        <div id="statistics-section" class="page-section">
+            <!-- Statistics will be loaded here asynchronously -->
+        </div>
     </div>
 
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            loadDataRecords();
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.page-section');
 
+            navLinks.forEach(link => {
+                link.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const targetSection = document.getElementById(this.getAttribute('data-section'));
+
+                    navLinks.forEach(link => link.classList.remove('active'));
+                    sections.forEach(section => section.classList.remove('active'));
+
+                    this.classList.add('active');
+                    targetSection.classList.add('active');
+
+                    // Hide all sections except the target section
+                    sections.forEach(section => {
+                        if (section !== targetSection) {
+                            section.style.display = 'none';
+                        } else {
+                            section.style.display = 'block';
+                        }
+                    });
+
+                    // Load content asynchronously
+                    loadSectionContent(targetSection);
+                });
+            });
+
+            // Initial load for the active section
+            const activeSection = document.querySelector('.page-section.active');
+            activeSection.style.display = 'block';
+            loadSectionContent(activeSection);
+        });
+
+        function loadSectionContent(section) {
+            const sectionId = section.id;
+            let url;
+
+            switch (sectionId) {
+                case 'data-records-section':
+                    url = '{{ route("dataRecord.async", $mission->id) }}';
+                    break;
+                case 'drones-section':
+                    url = '{{ route("drones.async", $mission->id) }}';
+                    break;
+                case 'control-points-section':
+                    url = '{{ route("controlPoints.async", $mission->id) }}';
+                    break;
+                case 'statistics-section':
+                    url = '{{ route("dataRecord.async", $mission->id) }}';
+                    break;
+                default:
+                    return;
+            }
+
+            fetch(url)
+                .then(response => response.text())
+                .then(html => {
+                    section.innerHTML = html;
+                    if (sectionId === 'data-records-section') {
+                        setupDataRecordsForm();
+                    }
+                });
+        }
+
+        function setupDataRecordsForm() {
             document.getElementById('create-data-record-form').addEventListener('submit', function (e) {
                 e.preventDefault();
                 createDataRecord();
             });
-        });
-
-        function loadDataRecords() {
-            fetch('{{ route('dataRecord.index', $mission->id) }}')
-                .then(response => response.json())
-                .then(dataRecords => {
-                    let tbody = document.querySelector('#data-records-table tbody');
-                    tbody.innerHTML = '';
-                    dataRecords.forEach(record => {
-                        let row = `
-                        <tr>
-                            <td>${record.id}</td>
-                            <td>${record.name}</td>
-                            <td>${record.description}</td>
-                            <td>
-                                <!-- Actions such as edit or delete -->
-                                <a href="/data-records/${record.id}/edit">Edit</a>
-                                <form action="/data-records/${record.id}" method="POST" style="display:inline;">
-                                    @csrf
-                        @method('DELETE')
-                        <button type="submit">Delete</button>
-                    </form>
-                </td>
-            </tr>
-`;
-                        tbody.innerHTML += row;
-                    });
-                });
         }
 
         function createDataRecord() {
             let form = document.getElementById('create-data-record-form');
             let formData = new FormData(form);
 
-            fetch('{{ route('dataRecord.store') }}', {
+            fetch('{{ route("dataRecord.store") }}', {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
@@ -102,21 +129,23 @@
                     let row = `
                 <tr>
                     <td>${dataRecord.id}</td>
-                    <td>${dataRecord.name}</td>
-                    <td>${dataRecord.description}</td>
+                    <td>${dataRecord.mission.name ?? 'None'}</td>
+                    <td>${dataRecord.control_point.name ?? 'None'}</td>
+                    <td>${dataRecord.drone.name ?? 'None'}</td>
+                    <td>${dataRecord.data_quality}</td>
+                    <td>${dataRecord.created_at}</td>
                     <td>
-                        <!-- Actions such as edit or delete -->
-                        <a href="/data-records/${dataRecord.id}/edit">Edit</a>
+                        <a href="/data-records/${dataRecord.id}/edit" class="btn btn-sm btn-primary">Edit</a>
                         <form action="/data-records/${dataRecord.id}" method="POST" style="display:inline;">
                             @csrf
                     @method('DELETE')
-                    <button type="submit">Delete</button>
+                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
                 </form>
             </td>
         </tr>
 `;
                     tbody.innerHTML += row;
-                    form.reset();
+                    form.reset();  // Reset the form fields
                 });
         }
     </script>
