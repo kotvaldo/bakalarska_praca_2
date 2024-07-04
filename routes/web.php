@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DataRecordController;
 use App\Http\Controllers\DroneController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
@@ -33,6 +34,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::resource('mission', \App\Http\Controllers\MissionController::class);
     Route::get('/mission/{mission}/delete', [\App\Http\Controllers\MissionController::class, 'destroy'])->name('mission.delete');
     Route::get('/recipes/{recipe}', [\App\Http\Controllers\MissionController::class, 'show'])->name('recipe.show');
-
+    Route::get('/missions/{mission}/data-records', [DataRecordController::class, 'index'])->name('dataRecord.index');
+    Route::post('/data-records', [DataRecordController::class, 'store'])->name('dataRecord.store');
 });
 

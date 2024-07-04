@@ -1,9 +1,14 @@
+
 <form action="{{ $action }}" method="POST">
     @csrf
     @method($method)
     <div class="form-group mb-2">
         <label for="name">Mission name <span style="color: red">*</span></label>
         <input type="text" class="form-control" id="name" name="name" placeholder="Enter Name: " value="{{ old('name', $model->name) }}" required>
+    </div>
+    <div class="form-group mb-2">
+        <label for="description">Mission description <span style="color: red">*</span></label>
+        <textarea class="form-control" id="description" name="description" placeholder="Enter Description:" rows="4" required>{{ old('description', @$model->description) }}</textarea>
     </div>
     <div class="form-group mb-2">
         <label for="automatic">Automatic <span style="color: red">*</span></label>

@@ -13,9 +13,9 @@ return new class extends Migration
     {
         Schema::create('data_records', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('mission_id')->constrained('missions');
-            $table->foreignId('control_point_id')->constrained('control_points');
-            $table->foreignId('drone_id')->constrained('drones');
+            $table->foreignId('mission_id')->nullable()->constrained('missions')->onDelete('set null')->onUpdate('cascade');
+            $table->foreignId('control_point_id')->nullable()->constrained('control_points')->onDelete('set null')->onUpdate('cascade');
+            $table->foreignId('drone_id')->nullable()->constrained('drones')->onDelete('set null')->onUpdate('cascade');
             $table->integer('data_quality')->nullable();
             $table->timestamps();
         });

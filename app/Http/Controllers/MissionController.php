@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Aginev\Datagrid\Datagrid;
 use App\Models\ControlPoint;
+use App\Models\DataRecord;
 use App\Models\Drone;
 use App\Models\Mission;
 use Illuminate\Http\Request;
@@ -97,6 +98,7 @@ class MissionController extends Controller
         $request->validate([
             'name' => 'required',
             'automatic' => 'required|boolean',
+            'description' => 'required',
             'total_cp_count' => 'required|integer|min:1',
             'drones' => 'required|array|min:1|max:10',
         ]);
@@ -104,6 +106,7 @@ class MissionController extends Controller
 
         $mission = Mission::create([
             'name' => $request->name,
+            'description' => $request->description,
             'automatic' => $request->automatic,
             'total_cp_count' => $request->total_cp_count,
             'drones_count' => count($request->drones),
@@ -140,6 +143,7 @@ class MissionController extends Controller
     {
         $request->validate([
             'name' => 'required',
+            'description' => 'required',
             'automatic' => 'required|boolean',
             'total_cp_count' => 'required|integer|min:1',
             'drones' => 'required|array|min:1|max:10',
@@ -164,6 +168,7 @@ class MissionController extends Controller
         $mission->update([
             'name' => $request->name,
             'automatic' => $request->automatic,
+            'description' => $request->description,
             'total_cp_count' => $request->total_cp_count,
             'drones_count' => count($request->drones),
         ]);
@@ -178,22 +183,26 @@ class MissionController extends Controller
     }
     public function show(Mission $mission) {
         $drones = Drone::where('mission_id', $mission->id)->get();
+        $dataRecords = DataRecord::where('mission_id', $mission->id)->get();
+        $controlPoints = ControlPoint::where('mission_id', $mission->id)->get();
         return view('mission.show', [
             'mission' => $mission,
-            'drones' => $drones
+            'drones' => $drones,
+            'dataRecords' => $dataRecords,
+            'controlPoints' => $controlPoints,
         ]);
     }
 
 
     public function destroy(Mission $mission)
     {
-        ControlPoint::where('mission_id', $mission->id)->update(['mission_id' => null]);
 
         Drone::where('mission_id', $mission->id)->update(['mission_id' => null]);
 
         // Vymazanie všetkých DataRecord priradených k misii (ak je nastavený ON DELETE CASCADE v databáze, nemusíme explicitne mazať)
         DataRecord::where('mission_id', $mission->id)->delete();
 
+        ControlPoint::where('mission_id', $mission->id)->delete();
         // Odstránenie misie
         $mission->delete();
 

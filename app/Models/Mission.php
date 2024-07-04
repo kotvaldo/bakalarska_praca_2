@@ -16,9 +16,19 @@ class Mission extends Model
         'name',
         'user_id',
         'active',
+        'description',
         'automatic',
         'total_cp_count',
-        'drones_count'
+        'drones_count',
+        'p0',
+        'p1',
+        'p2',
+        'w',
+        'z0',
+        'z1',
+        'z2',
+        'z3',
+
     ];
     public function setFilters()
     {
@@ -31,8 +41,6 @@ class Mission extends Model
             ->like('p0')
             ->like('p1')
             ->like('p2')
-            ->like('pn')
-            ->like('w')
             ->equal('total_cp_count')
             ->equal('drones_count');
     }
