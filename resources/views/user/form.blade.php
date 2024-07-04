@@ -25,5 +25,5 @@
         <input type="password" class="form-control" id="password" name="password_confirmation" placeholder="Password">
     </div>
     <input type="button" class="btn btn-warning" value="Cancel" onclick="history.back()">
-    <input type="submit" class="btn btn-success" value="Send">
+    <input type="submit" class="btn btn-success" value="Sumbit">
 </form>

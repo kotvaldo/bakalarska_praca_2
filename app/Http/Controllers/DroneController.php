@@ -3,7 +3,9 @@
 namespace App\Http\Controllers;
 
 use Aginev\Datagrid\Datagrid;
+use App\Models\ControlPoint;
 use App\Models\Drone;
+use App\Models\Mission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -123,9 +125,15 @@ class DroneController extends Controller
                 unlink($oldImagePath);
             }
         }
+
+        // Nastavenie mission_id na null pre všetky Control Points, ktoré patria tomuto dronu
+        ControlPoint::where('drone_id', $drone->id)->update(['drone_id' => null]);
+
+        // Nastavenie mission_id na null pre všetky misie, ktoré patria tomuto dronu
+        Mission::where('drone_id', $drone->id)->update(['drone_id' => null]);
+
         $drone->delete();
 
         return redirect()->route('drone.index')->with('alert', 'Drone was successfully removed!');
     }
-
 }

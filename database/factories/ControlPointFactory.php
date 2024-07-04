@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\ControlPoint;
 use App\Models\Drone;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -10,28 +11,38 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class ControlPointFactory extends Factory
 {
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
+    protected $model = ControlPoint::class;
+
     public function definition(): array
     {
         $types = ['IMAGE', 'SIGNAL', 'NUMBER'];
         return [
             'data_type' => $this->faker->randomElement($types),
-            'drone_id' => $this->getRandomDroneId(),
+            'drone_id' => null, // Default value
             'latitude' => $this->faker->latitude,
             'longitude' => $this->faker->longitude,
         ];
     }
 
-    private function getRandomDroneId()
+    public function withMissionId($missionId)
     {
-        if ($this->faker->boolean(25)) {
-            $drone = Drone::inRandomOrder()->first();
-            return $drone ? $drone->id : null;
-        }
-        return null;
+        return $this->state(function (array $attributes) use ($missionId) {
+            $droneId = null;
+            if ($this->faker->boolean(25)) { // 25% pravdepodobnosť
+                $droneId = $this->getRandomDroneId($missionId);
+            }
+
+            return [
+                'drone_id' => $droneId,
+                'mission_id' => $missionId,
+            ];
+        });
+    }
+
+    private function getRandomDroneId($missionId)
+    {
+        $drone = Drone::where('mission_id', $missionId)->inRandomOrder()->first();
+        return $drone ? $drone->id : null;
     }
 }
+

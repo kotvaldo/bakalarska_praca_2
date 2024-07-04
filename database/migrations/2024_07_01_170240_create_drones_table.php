@@ -19,7 +19,6 @@ return new class extends Migration
             $table->unsignedBigInteger('mission_id')->nullable()->default(null);
             $table->foreign('mission_id')->references('id')->on('missions');
             $table->string('image')->nullable();
-            $table->integer('cp_count')->nullable()->default(0);
             $table->timestamps();
         });
     }

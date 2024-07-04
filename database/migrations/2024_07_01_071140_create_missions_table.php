@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('missions', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('user_id')->nullable()->default(auth()->id());
             $table->foreign('user_id')->references('id')->on('users');
             $table->string("name");
             $table->boolean("active")->default(true);

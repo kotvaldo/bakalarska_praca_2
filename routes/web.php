@@ -30,5 +30,9 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/user/{user}/delete', [UserController::class, 'destroy'])->name('user.delete');
     Route::resource('drone', DroneController::class);
     Route::get('/drone/{drone}/delete', [DroneController::class, 'destroy'])->name('drone.delete');
+    Route::resource('mission', \App\Http\Controllers\MissionController::class);
+    Route::get('/mission/{mission}/delete', [\App\Http\Controllers\MissionController::class, 'destroy'])->name('mission.delete');
+    Route::get('/recipes/{recipe}', [\App\Http\Controllers\MissionController::class, 'show'])->name('recipe.show');
+
 });
 

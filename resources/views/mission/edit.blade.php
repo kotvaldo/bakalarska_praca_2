@@ -5,9 +5,9 @@
         <div class="row justify-content-center">
             <div class="col-md-12">
                 <div class="card">
-                    <div class="card-header"><b>{{ __('Add new Mission') }}</b></div>
+                    <div class="card-header"><b>{{ __('Edit the Mission') }}</b></div>
                     <div class="card-body">
-                        @include('mission.form')
+                        @include('mission.form_edit')
                     </div>
                 </div>
             </div>
