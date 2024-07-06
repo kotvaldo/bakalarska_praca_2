@@ -55,19 +55,34 @@
             <!-- Statistics will be loaded here asynchronously -->
         </div>
     </div>
+@endsection
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const navLinks = document.querySelectorAll('.nav-link[data-section]');
+        const sections = document.querySelectorAll('.page-section');
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const navLinks = document.querySelectorAll('.nav-link');
-            const sections = document.querySelectorAll('.page-section');
-
+        // Skontroluj, či sú sekcie prítomné
+        if (sections.length > 0 && navLinks.length > 0) {
             navLinks.forEach(link => {
                 link.addEventListener('click', function (e) {
                     e.preventDefault();
                     const targetSection = document.getElementById(this.getAttribute('data-section'));
 
-                    navLinks.forEach(link => link.classList.remove('active'));
-                    sections.forEach(section => section.classList.remove('active'));
+                    if (!targetSection) {
+                        console.error('Target section not found:', this.getAttribute('data-section'));
+                        return;
+                    }
+
+                    navLinks.forEach(link => {
+                        if (link.classList) {
+                            link.classList.remove('active');
+                        }
+                    });
+                    sections.forEach(section => {
+                        if (section.classList) {
+                            section.classList.remove('active');
+                        }
+                    });
 
                     this.classList.add('active');
                     targetSection.classList.add('active');
@@ -88,75 +103,93 @@
 
             // Initial load for the active section
             const activeSection = document.querySelector('.page-section.active');
-            activeSection.style.display = 'block';
-            loadSectionContent(activeSection);
-        });
-
-        function loadSectionContent(section) {
-            const sectionId = section.id;
-            let url;
-
-            switch (sectionId) {
-                case "data-records-section":
-                    url = '{{ route("dataRecord.async", $mission->id) }}';
-                    break;
-                case "drones-section":
-                    url = '{{ route("drones.async", $mission->id) }}';
-                    break;
-                case "control-points-section":
-                    url = '{{ route("controlPoints.async", $mission->id) }}';
-                    break;
-                case "statistics-section":
-                    url = '{{ route("dataRecord.async", $mission->id) }}';
-                    break;
-                default:
-                    return;
+            if (activeSection) {
+                activeSection.style.display = 'block';
+                loadSectionContent(activeSection);
+            } else {
+                console.error('Active section not found');
             }
-
-            console.log(`Loading content from: ${url}`);
-
-            fetch(url)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`Network response was not ok: ${response.statusText}`);
-                    }
-                    return response.text();
-                })
-                .then(html => {
-                    section.innerHTML = html;
-                    initializeFormEvents(); // Reinitialize events
-                })
-                .catch(error => {
-                    console.error('Error loading section content:', error);
-                });
         }
 
-        function initializeFormEvents() {
-            const controlPoints = @json($controlPoints);
-
-            const addRowButton = document.getElementById('add-row');
-            const controlPointsContainer = document.getElementById('control-points');
-
-            if (controlPointsContainer) {
-                controlPointsContainer.addEventListener('click', function(e) {
-                    if (e.target && e.target.classList.contains('remove-row')) {
-                        console.log('Remove button clicked');
-                        e.target.closest('.row').remove();
+        // Pridáme event listener pre kliknutia na navigačné odkazy mimo sekcií
+        document.querySelectorAll('.navbar-nav a').forEach(navLink => {
+            navLink.addEventListener('click', function (e) {
+                if (!this.getAttribute('data-section')) {
+                    const targetUrl = this.getAttribute('href');
+                    if (targetUrl) {
+                        window.location.href = targetUrl;
                     }
-                });
-            }
+                }
+            });
+        });
+    });
 
-            if (addRowButton) {
-                addRowButton.addEventListener('click', function() {
-                    console.log('Add button clicked');
-                    let newRow = document.createElement('div');
-                    newRow.className = 'row mb-3';
-                    newRow.innerHTML = `
+    function loadSectionContent(section) {
+        const sectionId = section.id;
+        let url;
+
+        switch (sectionId) {
+            case "data-records-section":
+                url = '{{ route("dataRecord.async", $mission->id) }}';
+                break;
+            case "drones-section":
+                url = '{{ route("drones.async", $mission->id) }}';
+                break;
+            case "control-points-section":
+                url = '{{ route("controlPoints.async", $mission->id) }}';
+                break;
+            case "statistics-section":
+                url = '{{ route("dataRecord.async", $mission->id) }}';
+                break;
+            default:
+                console.error('Invalid section id:', sectionId);
+                return;
+        }
+
+        console.log(`Loading content from: ${url}`);
+
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.statusText}`);
+                }
+                return response.text();
+            })
+            .then(html => {
+                section.innerHTML = html;
+                initializeFormEvents(); // Reinitialize events
+            })
+            .catch(error => {
+                console.error('Error loading section content:', error);
+            });
+    }
+
+    function initializeFormEvents() {
+        const controlPoints = @json($controlPoints);
+
+        const addRowButton = document.getElementById('add-row');
+        const controlPointsContainer = document.getElementById('control-points');
+
+        if (controlPointsContainer) {
+            controlPointsContainer.addEventListener('click', function (e) {
+                if (e.target && e.target.classList.contains('remove-row')) {
+                    console.log('Remove button clicked');
+                    e.target.closest('.row').remove();
+                }
+            });
+        }
+
+        if (addRowButton) {
+            addRowButton.addEventListener('click', function () {
+                console.log('Add button clicked');
+                let newRow = document.createElement('div');
+                newRow.className = 'row mb-3';
+                newRow.innerHTML = `
                 <div class="col">
                     <label for="control_point" class="form-label">Control Point:</label>
                     <select name="control_point[]" class="form-select" required>
                         ${controlPoints.map(controlPoint =>
-                        `<option value="${controlPoint.id}">
+                    `<option value="${controlPoint.id}">
                                 ${controlPoint.longitude} | ${controlPoint.latitude} | ${controlPoint.data_type}
                             </option>`).join('')}
                     </select>
@@ -165,42 +198,41 @@
                     <button type="button" class="btn btn-danger remove-row">-</button>
                 </div>
             `;
-                    controlPointsContainer.appendChild(newRow);
-                });
-            }
-
-            const createDataRecordForm = document.getElementById('create-data-record-form');
-            if (createDataRecordForm) {
-                createDataRecordForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    console.log('Form submit');
-
-                    let form = e.target;
-                    let formData = new FormData(form);
-                    let controlPoints = formData.getAll('control_point[]');
-
-                    Promise.all(controlPoints.map(controlPointId => {
-                        let newFormData = new FormData();
-                        newFormData.append('drone_id', formData.get('drone_id'));
-                        newFormData.append('mission_id', formData.get('mission_id'));
-                        newFormData.append('control_point_id', controlPointId);
-                        newFormData.append('_token', formData.get('_token'));
-
-                        return fetch('{{ route('dataRecord.store') }}', {
-                            method: 'POST',
-                            body: newFormData
-                        })
-                            .then(response => response.json());
-                    }))
-                        .then(results => {
-                            console.log('All data records created', results);
-                            loadSectionContent(document.getElementById('data-records-section')); // Reload the data records section
-                        })
-                        .catch(error => {
-                            console.error('Error creating data records:', error);
-                        });
-                });
-            }
+                controlPointsContainer.appendChild(newRow);
+            });
         }
-    </script>
-@endsection
+
+        const createDataRecordForm = document.getElementById('create-data-record-form');
+        if (createDataRecordForm) {
+            createDataRecordForm.addEventListener('submit', function (e) {
+                e.preventDefault();
+                console.log('Form submit');
+
+                let form = e.target;
+                let formData = new FormData(form);
+                let controlPoints = formData.getAll('control_point[]');
+
+                Promise.all(controlPoints.map(controlPointId => {
+                    let newFormData = new FormData();
+                    newFormData.append('drone_id', formData.get('drone_id'));
+                    newFormData.append('mission_id', formData.get('mission_id'));
+                    newFormData.append('control_point_id', controlPointId);
+                    newFormData.append('_token', formData.get('_token'));
+
+                    return fetch('{{ route('dataRecord.store') }}', {
+                        method: 'POST',
+                        body: newFormData
+                    })
+                        .then(response => response.json());
+                }))
+                    .then(results => {
+                        console.log('All data records created', results);
+                        loadSectionContent(document.getElementById('data-records-section')); // Reload the data records section
+                    })
+                    .catch(error => {
+                        console.error('Error creating data records:', error);
+                    });
+            });
+        }
+    }
+</script>
