@@ -8,13 +8,113 @@ use App\Models\DataRecord;
 use App\Models\Drone;
 use App\Models\Mission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class DataRecordController extends Controller
 {
-    public function index(Mission $mission) {
 
-        return view('data_record.index');
+    public function index(Request $request)
+    {
+        $dataRecords = DataRecord::query()->filter($request->get('f', []))->get();
+
+        $grid = new Datagrid($dataRecords, $request->get('f', []));
+
+        $grid->setColumn('id', 'ID', ['sortable' => true, 'has_filters' => true])
+            ->setColumn('mission_id', 'Mission', [
+                'sortable' => true,
+                'has_filters' => true,
+                'filters' => Mission::pluck('name', 'id')->toArray(),
+                'wrapper' => function ($value, $row) {
+                    $missionName = Mission::find($value)->name ?? 'None';
+                    return $missionName;
+                }
+            ])
+            ->setColumn('control_point_id', 'Control Point ID', [
+                'sortable' => true,
+                'has_filters' => true,
+                'filters' => ControlPoint::pluck('id', 'id')->toArray(),
+                'wrapper' => function ($value, $row) {
+                    return $value ?: 'None';
+                }
+            ])
+            ->setColumn('control_point_latitude', 'Control Point Latitude', [
+                'sortable' => true,
+                'has_filters' => false,
+                'wrapper' => function ($value, $row) {
+                    $controlPointLatitude = ControlPoint::find($row->control_point_id)->latitude ?? 'None';
+                    return $controlPointLatitude;
+                }
+            ])
+            ->setColumn('control_point_longitude', 'Control Point Longitude', [
+                'sortable' => true,
+                'has_filters' => false,
+                'wrapper' => function ($value, $row) {
+                    $controlPointLongitude = ControlPoint::find($row->control_point_id)->longitude ?? 'None';
+                    return $controlPointLongitude;
+                }
+            ])
+            ->setColumn('control_point_type', 'Control Point Type', [
+                'sortable' => true,
+                'has_filters' => false,
+                'wrapper' => function ($value, $row) {
+                    $controlPointType = ControlPoint::find($row->control_point_id)->data_type ?? 'None';
+                    return $controlPointType;
+                }
+            ])
+            ->setColumn('drone_name', 'Drone Name', [
+                'sortable' => true,
+                'has_filters' => true,
+                'filters' => Drone::pluck('name', 'id')->toArray(),
+                'wrapper' => function ($value, $row) {
+                    $droneName = Drone::find($row->drone_id)->name ?? 'None';
+                    return $droneName;
+                }
+            ])
+            ->setColumn('drone_type', 'Drone Type', [
+                'sortable' => true,
+                'has_filters' => false,
+                'wrapper' => function ($value, $row) {
+                    $droneType = Drone::find($row->drone_id)->type ?? 'None';
+                    return $droneType;
+                }
+            ])
+            ->setColumn('data_quality', 'Data Quality', [
+                'sortable' => true,
+                'has_filters' => true,
+                'filters' => [
+                    null => 'All',
+                    0 => 'Unacceptable Data',
+                    1 => 'Acceptable Data',
+                    2 => 'Excellent Data',
+                    3 => 'Uncollected Data (Malfunction)',
+                ],
+                'wrapper' => function ($value, $row) {
+                    switch ($value) {
+                        case 0:
+                            return 'Unacceptable Data';
+                        case 1:
+                            return 'Acceptable Data';
+                        case 2:
+                            return 'Excellent Data';
+                        case 3:
+                            return 'Uncollected Data (Malfunction)';
+                        default:
+                            return 'Unknown';
+                    }
+                }
+            ])
+            ->setColumn('created_at', 'Created At', ['sortable' => true, 'has_filters' => true])
+            ->setActionColumn([
+                'wrapper' => function ($value, $row) {
+                    return (Auth::user()->can('delete', $row->getData()) ? '<a href="' . route('dataRecord.destroy', $row->id) . '" title="Delete" class="btn btn-sm btn-danger" onclick="return confirm(\'Are you sure ?\')"><i class="bi bi-trash"></i></a>' : '');
+                }
+            ]);
+
+        return view('data_record.index', [
+            'grid' => $grid
+        ]);
     }
+
     public function async(Mission $mission)
     {
         // Načítanie údajov misie, dronov a kontrolných bodov
@@ -25,7 +125,8 @@ class DataRecordController extends Controller
         return view('partials.data-records', compact('dataRecords', 'mission', 'drones', 'controlPoints'));
     }
 
-    public function store(Request $request) {
+    public function store(Request $request)
+    {
 
         $drone = Drone::find($request->input('drone_id'));
         $controlPoint = ControlPoint::find($request->input('control_point_id'));
@@ -72,4 +173,40 @@ class DataRecordController extends Controller
 
         return response()->json($dataRecord);
     }
+
+    public function destroy(DataRecord $dataRecord)
+    {
+        $this->missionFix($dataRecord);
+        $dataRecord->delete();
+        return redirect()->route('data_record.index')->with('alert', 'DataRecord was successfully removed!');
+    }
+
+    public function destroyAjax(DataRecord $dataRecord)
+    {
+        $this->missionFix($dataRecord);
+        $dataRecord->delete();
+        return response()->json(['success' => 'Data record deleted successfully.']);
+    }
+
+    public function missionFix(DataRecord $dataRecord)
+    {
+        $mission = Mission::find($dataRecord->mission_id);
+
+        $dataQuality = $dataRecord->data_quality;
+
+        // Aktualizácia počtov v misii
+        $mission->w -= 1;
+        if ($dataQuality == 0) {
+            $mission->z0 -= 1;
+        } elseif ($dataQuality == 1) {
+            $mission->z1 -= 1;
+        } elseif ($dataQuality == 2) {
+            $mission->z2 -= 1;
+        } elseif ($dataQuality == 3) {
+            $mission->zn -= 1;
+        }
+
+        $mission->save();
+    }
+
 }

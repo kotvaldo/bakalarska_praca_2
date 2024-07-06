@@ -62,7 +62,7 @@
                         <a class="nav-link" href="{{route('drone.index')}}">{{__('Manage drones') }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">{{__('Manage data') }}</a>
+                        <a class="nav-link" href="{{route('data_record.index')}}">{{__('Manage data') }}</a>
                     </li>
                 </ul>
 

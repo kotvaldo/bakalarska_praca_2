@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Aginev\Datagrid\Datagrid;
 use App\Models\ControlPoint;
+use App\Models\DataRecord;
 use App\Models\Drone;
 use App\Models\Mission;
 use Illuminate\Http\Request;
@@ -130,7 +131,7 @@ class DroneController extends Controller
         ControlPoint::where('drone_id', $drone->id)->update(['drone_id' => null]);
 
         // Nastavenie mission_id na null pre všetky misie, ktoré patria tomuto dronu
-        Mission::where('drone_id', $drone->id)->update(['drone_id' => null]);
+        DataRecord::where('drone_id', $drone->id)->update(['drone_id' => null]);
 
         $drone->delete();
 

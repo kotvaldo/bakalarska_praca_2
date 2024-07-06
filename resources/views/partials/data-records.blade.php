@@ -20,11 +20,11 @@
             <tr>
                 <td>{{ $dataRecord->id }}</td>
                 <td>{{ $dataRecord->mission_id ? $dataRecord->mission->name : 'None' }}</td>
-                <td>{{ $dataRecord->control_point_id ? $dataRecord->controlPoint->latitude: 'None' }}</td>
-                <td>{{ $dataRecord->control_point_id ? $dataRecord->controlPoint->longitude : 'None' }}</td>
-                <td>{{ $dataRecord->control_point_id ?  $dataRecord->controlPoint->data_type: 'None' }}</td>
-                <td>{{ $dataRecord->drone_id ? $dataRecord->drone->name : 'None' }}</td>
-                <td>{{ $dataRecord->drone_id ? $dataRecord->drone->type : 'None' }}</td>
+                <td>{{ $dataRecord->control_point_id ? $dataRecord->controlPoint->latitude: 'CP was Removed' }}</td>
+                <td>{{ $dataRecord->control_point_id ? $dataRecord->controlPoint->longitude : 'CP was Removed' }}</td>
+                <td>{{ $dataRecord->control_point_id ?  $dataRecord->controlPoint->data_type: 'CP was Removed' }}</td>
+                <td>{{ $dataRecord->drone_id ? $dataRecord->drone->name : 'Drone was Removed' }}</td>
+                <td>{{ $dataRecord->drone_id ? $dataRecord->drone->type : 'Drone was Removed' }}</td>
                 <td>
                     @switch($dataRecord->data_quality)
                         @case(0)
@@ -44,8 +44,12 @@
                     @endswitch
                 </td>
                 <td>{{ $dataRecord->created_at }}</td>
+                <td>
+                    <button type="button" class="btn btn-sm btn-danger delete-record" data-id="{{ $dataRecord->id }}">Delete</button>
+                </td>
             </tr>
         @endforeach
+
         </tbody>
     </table>
 </div>

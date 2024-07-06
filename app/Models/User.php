@@ -61,4 +61,5 @@ class User extends Authenticatable
             get: fn($value) => $this->castAttribute('created_at', $value)->format('m/d/Y H:m:i')
         );
     }
+
 }

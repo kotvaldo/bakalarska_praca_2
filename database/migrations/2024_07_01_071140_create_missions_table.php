@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('missions', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('user_id')->nullable()->default(auth()->id());
-            $table->foreign('user_id')->references('id')->on('users');
+            $table->foreign('user_id')->references('id')->on('users')->onDelete('set null');
             $table->string("name");
             $table->string("description")->default("");
             $table->boolean("active")->default(true);

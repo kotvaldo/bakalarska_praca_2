@@ -1,7 +1,6 @@
 @extends('layouts.app')
 
 @section('content')
-    <link rel="stylesheet" href="{{ asset('css/login.css') }}">
     <div class="container mt-5">
         <div class="text-center mb-4">
             <h1>{{ $mission->name }}</h1>
@@ -13,7 +12,7 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title justify-content-center">Mission Details</h5>
-                        <p class="card-text"><strong>User ID:</strong> {{ $mission->user_id }}</p>
+                        <p class="card-text"><strong>User ID:</strong> {{ $mission->user ? $mission->user->name : 'User was removed' }}</p>
                         <p class="card-text"><strong>Status:</strong> {{ $mission->active ? 'Active' : 'Inactive' }}</p>
                         <p class="card-text"><strong>Automatic:</strong> {{ $mission->automatic ? 'True' : 'False' }}</p>
                         <p class="card-text"><strong>Created At:</strong> {{ $mission->created_at }}</p>
@@ -56,12 +55,12 @@
         </div>
     </div>
 @endsection
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const navLinks = document.querySelectorAll('.nav-link[data-section]');
         const sections = document.querySelectorAll('.page-section');
 
-        // Skontroluj, či sú sekcie prítomné
         if (sections.length > 0 && navLinks.length > 0) {
             navLinks.forEach(link => {
                 link.addEventListener('click', function (e) {
@@ -87,21 +86,14 @@
                     this.classList.add('active');
                     targetSection.classList.add('active');
 
-                    // Hide all sections except the target section
                     sections.forEach(section => {
-                        if (section !== targetSection) {
-                            section.style.display = 'none';
-                        } else {
-                            section.style.display = 'block';
-                        }
+                        section.style.display = section === targetSection ? 'block' : 'none';
                     });
 
-                    // Load content asynchronously
                     loadSectionContent(targetSection);
                 });
             });
 
-            // Initial load for the active section
             const activeSection = document.querySelector('.page-section.active');
             if (activeSection) {
                 activeSection.style.display = 'block';
@@ -111,7 +103,6 @@
             }
         }
 
-        // Pridáme event listener pre kliknutia na navigačné odkazy mimo sekcií
         document.querySelectorAll('.navbar-nav a').forEach(navLink => {
             navLink.addEventListener('click', function (e) {
                 if (!this.getAttribute('data-section')) {
@@ -157,7 +148,7 @@
             })
             .then(html => {
                 section.innerHTML = html;
-                initializeFormEvents(); // Reinitialize events
+                initializeFormEvents();
             })
             .catch(error => {
                 console.error('Error loading section content:', error);
@@ -227,12 +218,47 @@
                 }))
                     .then(results => {
                         console.log('All data records created', results);
-                        loadSectionContent(document.getElementById('data-records-section')); // Reload the data records section
+                        loadSectionContent(document.getElementById('data-records-section'));
                     })
                     .catch(error => {
                         console.error('Error creating data records:', error);
                     });
             });
         }
+
+        document.querySelectorAll('.delete-record').forEach(button => {
+            button.addEventListener('click', function (e) {
+                e.preventDefault();
+
+                if (!confirm('Are you sure you want to delete this data record?')) {
+                    return;
+                }
+
+                const recordId = this.getAttribute('data-id');
+                const url = `/data-records-ajax/${recordId}`;
+
+                fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    }
+                })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Network response was not ok: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            console.log(`Record with id ${recordId} deleted successfully`);
+                            loadSectionContent(document.getElementById('data-records-section')); // Reload section content
+                        } else {
+                            alert('Failed to delete the data record.');
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            });
+        });
     }
 </script>

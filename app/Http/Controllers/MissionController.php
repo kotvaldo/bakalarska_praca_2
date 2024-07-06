@@ -147,6 +147,7 @@ class MissionController extends Controller
             'automatic' => 'required|boolean',
             'total_cp_count' => 'required|integer|min:1',
             'drones' => 'required|array|min:1|max:10',
+            'active' => 'required|boolean'
         ]);
         $currentCpCount = $mission->total_cp_count;
         $newCpCount = $request->total_cp_count;
@@ -171,6 +172,7 @@ class MissionController extends Controller
             'description' => $request->description,
             'total_cp_count' => $request->total_cp_count,
             'drones_count' => count($request->drones),
+            'active' => $request->active
         ]);
 
         // Odstránenie predchádzajúceho priradenia dronov

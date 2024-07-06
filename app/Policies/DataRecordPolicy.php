@@ -13,7 +13,7 @@ class DataRecordPolicy
      */
     public function viewAny(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -21,7 +21,7 @@ class DataRecordPolicy
      */
     public function view(User $user, DataRecord $dataRecord): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -29,7 +29,7 @@ class DataRecordPolicy
      */
     public function create(User $user): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -37,7 +37,7 @@ class DataRecordPolicy
      */
     public function update(User $user, DataRecord $dataRecord): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -45,7 +45,7 @@ class DataRecordPolicy
      */
     public function delete(User $user, DataRecord $dataRecord): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -53,7 +53,7 @@ class DataRecordPolicy
      */
     public function restore(User $user, DataRecord $dataRecord): bool
     {
-        //
+        return true;
     }
 
     /**
@@ -61,6 +61,6 @@ class DataRecordPolicy
      */
     public function forceDelete(User $user, DataRecord $dataRecord): bool
     {
-        //
+        return true;
     }
 }

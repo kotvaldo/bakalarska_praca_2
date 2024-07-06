@@ -44,4 +44,9 @@ class Mission extends Model
             ->equal('total_cp_count')
             ->equal('drones_count');
     }
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
 }

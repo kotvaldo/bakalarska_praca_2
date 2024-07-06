@@ -1,3 +1,9 @@
+<div class="form-group text-danger mb-2">
+    @foreach ($errors->all() as $error)
+        {{ $error }}<br>
+    @endforeach
+</div>
+<link rel="stylesheet" href="{{ asset('css/app.css') }}">
 <form action="{{ route('mission.store') }}" method="POST">
     @csrf
     <div class="form-group mb-2">
@@ -23,7 +29,7 @@
         <label for="drones">Select Drones <span style="color: red">*</span></label>
         <select class="form-control" id="drones" name="drones[]" multiple required>
             @foreach($drones as $drone)
-                <option value="{{ $drone->id }}" {{ in_array($drone->id, old('drones', [])) ? 'selected' : '' }}>{{ $drone->name }}</option>
+                <option value="{{ $drone->id }}" {{ in_array($drone->id, old('drones', [])) ? 'selected' : '' }}>{{ $drone->name }} | {{ $drone->type }}</option>
             @endforeach
         </select>
     </div>
