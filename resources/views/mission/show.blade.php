@@ -2,11 +2,29 @@
 
 @section('content')
     <link rel="stylesheet" href="{{ asset('css/login.css') }}">
-    <div class="container">
-        <h1>{{ $mission->name }}</h1>
-        <p>{{ $mission->description }}</p>
+    <div class="container mt-5">
+        <div class="text-center mb-4">
+            <h1>{{ $mission->name }}</h1>
+            <p class="lead">{{ $mission->description }}</p>
+        </div>
 
-        <ul class="nav nav-tabs">
+        <div class="row justify-content-center">
+            <div class="col-md-6 mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title justify-content-center">Mission Details</h5>
+                        <p class="card-text"><strong>User ID:</strong> {{ $mission->user_id }}</p>
+                        <p class="card-text"><strong>Status:</strong> {{ $mission->active ? 'Active' : 'Inactive' }}</p>
+                        <p class="card-text"><strong>Automatic:</strong> {{ $mission->automatic ? 'True' : 'False' }}</p>
+                        <p class="card-text"><strong>Created At:</strong> {{ $mission->created_at }}</p>
+                        <p class="card-text"><strong>Total Control Points Count:</strong> {{ $mission->total_cp_count }}</p>
+                        <p class="card-text"><strong>Total Drones Count:</strong> {{ $mission->drones_count }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <ul class="nav nav-tabs mt-4">
             <li class="nav-item">
                 <a class="nav-link active" href="#" data-section="data-records-section">Data Records</a>
             </li>
@@ -21,19 +39,19 @@
             </li>
         </ul>
 
-        <div id="data-records-section" class="page-section active">
+        <div id="data-records-section" class="page-section active mt-3">
             <!-- Data records will be loaded here asynchronously -->
         </div>
 
-        <div id="drones-section" class="page-section">
+        <div id="drones-section" class="page-section mt-3">
             <!-- Drones will be loaded here asynchronously -->
         </div>
 
-        <div id="control-points-section" class="page-section">
+        <div id="control-points-section" class="page-section mt-3">
             <!-- Control points will be loaded here asynchronously -->
         </div>
 
-        <div id="statistics-section" class="page-section">
+        <div id="statistics-section" class="page-section mt-3">
             <!-- Statistics will be loaded here asynchronously -->
         </div>
     </div>
@@ -79,74 +97,110 @@
             let url;
 
             switch (sectionId) {
-                case 'data-records-section':
+                case "data-records-section":
                     url = '{{ route("dataRecord.async", $mission->id) }}';
                     break;
-                case 'drones-section':
+                case "drones-section":
                     url = '{{ route("drones.async", $mission->id) }}';
                     break;
-                case 'control-points-section':
+                case "control-points-section":
                     url = '{{ route("controlPoints.async", $mission->id) }}';
                     break;
-                case 'statistics-section':
+                case "statistics-section":
                     url = '{{ route("dataRecord.async", $mission->id) }}';
                     break;
                 default:
                     return;
             }
 
+            console.log(`Loading content from: ${url}`);
+
             fetch(url)
-                .then(response => response.text())
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Network response was not ok: ${response.statusText}`);
+                    }
+                    return response.text();
+                })
                 .then(html => {
                     section.innerHTML = html;
-                    if (sectionId === 'data-records-section') {
-                        setupDataRecordsForm();
+                    initializeFormEvents(); // Reinitialize events
+                })
+                .catch(error => {
+                    console.error('Error loading section content:', error);
+                });
+        }
+
+        function initializeFormEvents() {
+            const controlPoints = @json($controlPoints);
+
+            const addRowButton = document.getElementById('add-row');
+            const controlPointsContainer = document.getElementById('control-points');
+
+            if (controlPointsContainer) {
+                controlPointsContainer.addEventListener('click', function(e) {
+                    if (e.target && e.target.classList.contains('remove-row')) {
+                        console.log('Remove button clicked');
+                        e.target.closest('.row').remove();
                     }
                 });
-        }
+            }
 
-        function setupDataRecordsForm() {
-            document.getElementById('create-data-record-form').addEventListener('submit', function (e) {
-                e.preventDefault();
-                createDataRecord();
-            });
-        }
-
-        function createDataRecord() {
-            let form = document.getElementById('create-data-record-form');
-            let formData = new FormData(form);
-
-            fetch('{{ route("dataRecord.store") }}', {
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': document.querySelector('input[name="_token"]').value
-                },
-                body: formData
-            })
-                .then(response => response.json())
-                .then(dataRecord => {
-                    let tbody = document.querySelector('#data-records-table tbody');
-                    let row = `
-                <tr>
-                    <td>${dataRecord.id}</td>
-                    <td>${dataRecord.mission.name ?? 'None'}</td>
-                    <td>${dataRecord.control_point.name ?? 'None'}</td>
-                    <td>${dataRecord.drone.name ?? 'None'}</td>
-                    <td>${dataRecord.data_quality}</td>
-                    <td>${dataRecord.created_at}</td>
-                    <td>
-                        <a href="/data-records/${dataRecord.id}/edit" class="btn btn-sm btn-primary">Edit</a>
-                        <form action="/data-records/${dataRecord.id}" method="POST" style="display:inline;">
-                            @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                </form>
-            </td>
-        </tr>
-`;
-                    tbody.innerHTML += row;
-                    form.reset();  // Reset the form fields
+            if (addRowButton) {
+                addRowButton.addEventListener('click', function() {
+                    console.log('Add button clicked');
+                    let newRow = document.createElement('div');
+                    newRow.className = 'row mb-3';
+                    newRow.innerHTML = `
+                <div class="col">
+                    <label for="control_point" class="form-label">Control Point:</label>
+                    <select name="control_point[]" class="form-select" required>
+                        ${controlPoints.map(controlPoint =>
+                        `<option value="${controlPoint.id}">
+                                ${controlPoint.longitude} | ${controlPoint.latitude} | ${controlPoint.data_type}
+                            </option>`).join('')}
+                    </select>
+                </div>
+                <div class="col-auto d-flex align-items-end">
+                    <button type="button" class="btn btn-danger remove-row">-</button>
+                </div>
+            `;
+                    controlPointsContainer.appendChild(newRow);
                 });
+            }
+
+            const createDataRecordForm = document.getElementById('create-data-record-form');
+            if (createDataRecordForm) {
+                createDataRecordForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    console.log('Form submit');
+
+                    let form = e.target;
+                    let formData = new FormData(form);
+                    let controlPoints = formData.getAll('control_point[]');
+
+                    Promise.all(controlPoints.map(controlPointId => {
+                        let newFormData = new FormData();
+                        newFormData.append('drone_id', formData.get('drone_id'));
+                        newFormData.append('mission_id', formData.get('mission_id'));
+                        newFormData.append('control_point_id', controlPointId);
+                        newFormData.append('_token', formData.get('_token'));
+
+                        return fetch('{{ route('dataRecord.store') }}', {
+                            method: 'POST',
+                            body: newFormData
+                        })
+                            .then(response => response.json());
+                    }))
+                        .then(results => {
+                            console.log('All data records created', results);
+                            loadSectionContent(document.getElementById('data-records-section')); // Reload the data records section
+                        })
+                        .catch(error => {
+                            console.error('Error creating data records:', error);
+                        });
+                });
+            }
         }
     </script>
 @endsection

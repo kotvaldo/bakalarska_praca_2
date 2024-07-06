@@ -37,7 +37,7 @@ Route::group(['middleware' => ['auth']], function () {
 
 
     Route::get('/missions/{mission}/data-records-async', [DataRecordController::class, 'async'])->name('dataRecord.async');
-    Route::post('/data-records', [DataRecordController::class, 'store'])->name('dataRecord.store');
+    Route::post('/data-records/store', [DataRecordController::class, 'store'])->name('dataRecord.store');
     Route::get('/missions/{mission}/drones-async', [DroneController::class, 'async'])->name('drones.async');
     Route::get('/missions/{mission}/control-points-async', [ControlPointController::class, 'async'])->name('controlPoints.async');
 

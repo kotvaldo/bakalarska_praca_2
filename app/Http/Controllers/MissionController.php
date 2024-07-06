@@ -182,8 +182,12 @@ class MissionController extends Controller
         return redirect()->route('mission.index')->with('alert', 'Mission was successfully updated!');
     }
     public function show(Mission $mission) {
+          $controlPoints = ControlPoint::where('mission_id', $mission->id)->get();
+          $drones = Drone::where('mission_id', $mission->id)->get();
           return view('mission.show', [
-            'mission' => $mission
+            'mission' => $mission,
+              'controlPoints' => $controlPoints,
+              'drones' => $drones
         ]);
     }
 
@@ -202,4 +206,5 @@ class MissionController extends Controller
 
         return redirect()->route('mission.index')->with('alert', 'Mission was successfully removed!');
     }
+
 }

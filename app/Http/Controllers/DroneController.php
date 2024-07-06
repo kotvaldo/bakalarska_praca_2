@@ -141,5 +141,4 @@ class DroneController extends Controller
         $drones = Drone::where('mission_id', $mission->id)->get();
         return view('partials.drones', compact('drones', 'mission'));
     }
-
 }
