@@ -12,44 +12,76 @@ use Illuminate\Support\Facades\Auth;
 
 class MissionController extends Controller
 {
-    public function async(Mission $mission, Request $request)
+    public function index(Request $request)
     {
-        $dataRecords = DataRecord::query()->where('mission_id', $mission->id)->filter($request->get('f', []))->get();
+        $missions = Mission::query()->filter($request->get('f', []))->get();
 
-        $grid = new Datagrid($dataRecords, $request->get('f', []));
+        $grid = new Datagrid($missions, $request->get('f', []));
 
-        $grid->setColumn('id', 'ID', ['sortable' => true, 'has_filters' => true])
-            ->setColumn('mission_id', 'Mission', [
+        $grid->setColumn('name', 'Name', [
+            'sortable' => true,
+            'has_filters' => true,
+            'wrapper' => function ($value, $row) {
+                return '<a href="' . route('mission.show', [$row->id]) . '">' . e($value) . '</a>';
+            }
+        ])
+            ->setColumn('active', 'Active', [
                 'sortable' => true,
                 'has_filters' => true,
-                'display' => function($row) {
-                    return $row->mission->name ?? 'None';
+                'wrapper' => function ($value) {
+                    return $value ? 'Active' : 'Inactive';
                 }
             ])
-            ->setColumn('control_point_id', 'Control Point', [
+            ->setColumn('automatic', 'Automatic recalculation', [
                 'sortable' => true,
                 'has_filters' => true,
-                'display' => function($row) {
-                    return $row->controlPoint->name ?? 'None';
+                'wrapper' => function ($value) {
+                    return $value ? 'Enabled' : 'Disabled';
                 }
             ])
-            ->setColumn('drone_id', 'Drone', [
+            ->setColumn('p0', 'P0', [
                 'sortable' => true,
                 'has_filters' => true,
-                'display' => function($row) {
-                    return $row->drone->name ?? 'None';
+                'wrapper' => function ($value) {
+                    return number_format($value, 1) . '%';
                 }
             ])
-            ->setColumn('data_quality', 'Data Quality', ['sortable' => true, 'has_filters' => true])
-            ->setColumn('created_at', 'Created At', ['sortable' => true, 'has_filters' => true])
+            ->setColumn('p1', 'P1', [
+                'sortable' => true,
+                'has_filters' => true,
+                'wrapper' => function ($value) {
+                    return number_format($value, 1) . '%';
+                }
+            ])
+            ->setColumn('p2', 'P2', [
+                'sortable' => true,
+                'has_filters' => true,
+                'wrapper' => function ($value) {
+                    return number_format($value, 1) . '%';
+                }
+            ])
+            ->setColumn('pn', 'PN', [
+                'sortable' => true,
+                'has_filters' => true,
+                'wrapper' => function ($value) {
+                    return number_format($value, 1) . '%';
+                }
+            ])
+            ->setColumn('total_cp_count', 'CP Count', [
+                'sortable' => true,
+                'has_filters' => true,
+            ])
+            ->setColumn('drones_count', 'Drones Count', [
+                'sortable' => true,
+                'has_filters' => true,
+            ])
             ->setActionColumn([
                 'wrapper' => function ($value, $row) {
-                    return (Auth::user()->can('update', $row->getData()) ? '<a href="' . route('dataRecord.edit', [$row->id]) . '" title="Edit" class="btn btn-sm btn-primary"><i class="bi bi-pencil-square"></i></a> ' : '') .
-                        (Auth::user()->can('delete', $row->getData()) ? '<a href="' . route('dataRecord.delete', $row->id) . '" title="Delete" class="btn btn-sm btn-danger" onclick="return confirm(\'Are you sure ?\')"><i class="bi bi-trash"></i></a>' : '');
+                    return (Auth::user()->can('update', $row->getData()) ? '<a href="' . route('mission.edit', [$row->id]) . '" title="Edit" class="btn btn-sm btn-primary"><i class="bi bi-pencil-square"></i></a> ' : '') .
+                        (Auth::user()->can('delete', $row->getData()) ? '<a href="' . route('mission.delete', $row->id) . '" title="Delete" class="btn btn-sm btn-danger" onclick="return confirm(\'Are you sure ?\')"><i class="bi bi-trash"></i></a>' : '');
                 }
             ]);
-
-        return view('partials.grid', [
+        return view('mission.index', [
             'grid' => $grid
         ]);
     }
