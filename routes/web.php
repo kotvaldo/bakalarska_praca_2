@@ -3,6 +3,7 @@
 use App\Http\Controllers\ControlPointController;
 use App\Http\Controllers\DataRecordController;
 use App\Http\Controllers\DroneController;
+use App\Http\Controllers\MissionController;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -26,6 +27,9 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', [HomeController::class, 'index'])->name('home');
+Route::get('/about', [HomeController::class, 'about'])->name('home.about');
+Route::get('/privacy', [HomeController::class, 'privacy'])->name('home.privacy');
+Route::get('/rules', [HomeController::class, 'rules'])->name('home.rules');
 
 Route::group(['middleware' => ['auth']], function () {
     Route::resource('user', UserController::class);
@@ -42,6 +46,9 @@ Route::group(['middleware' => ['auth']], function () {
     Route::delete('/data-records-ajax/{dataRecord}', [DataRecordController::class, 'destroyAjax'])->name('dataRecord.destroyAjax');
     Route::get('/missions/{mission}/drones-async', [DroneController::class, 'async'])->name('drones.async');
     Route::get('/missions/{mission}/control-points-async', [ControlPointController::class, 'async'])->name('controlPoints.async');
+    Route::get('/missions/{mission}/statistics-async', [MissionController::class, 'statisticsAsync'])->name('statistics.async');
+    Route::get('/missions/{mission}/statistics-recalculate', [MissionController::class, 'recalculateStatistics'])->name('statistics.recalculate');
+
 
 });
 

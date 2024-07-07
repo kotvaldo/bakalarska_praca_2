@@ -35,7 +35,7 @@
     </div>
     <div class="form-group mb-2">
         <label for="drones">Select Drones <span style="color: red">*</span></label>
-        <select class="form-control" id="drones" name="drones[]" multiple required style="height: 400px;">
+        <select class="form-control large-select" id="drones" name="drones[]" multiple required style="height: 400px;">
             @foreach($drones as $drone)
                 <option value="{{ $drone->id }}" {{ in_array($drone->id, old('drones', $selectedDrones)) ? 'selected' : '' }}>{{ $drone->name }} | {{ $drone->type }}</option>
             @endforeach

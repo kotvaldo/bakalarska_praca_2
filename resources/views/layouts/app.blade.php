@@ -139,13 +139,13 @@
             </li>
         @endguest
         <li>
-            <a href="{{route('home')}}">About</a>
+            <a href="{{route('home.about')}}">About</a>
         </li>
         <li>
-            <a href="{{route('home')}}">Rules</a>
+            <a href="{{route('home.rules')}}">Rules</a>
         </li>
         <li>
-            <a href="{{route('home')}}">Privacy</a>
+            <a href="{{route('home.privacy')}}">Privacy</a>
         </li>
     </ul>
     <p class="copyright">Drone Monitoring @ 2024</p>

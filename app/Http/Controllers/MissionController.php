@@ -9,6 +9,7 @@ use App\Models\Drone;
 use App\Models\Mission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class MissionController extends Controller
 {
@@ -207,6 +208,77 @@ class MissionController extends Controller
         $mission->delete();
 
         return redirect()->route('mission.index')->with('alert', 'Mission was successfully removed!');
+    }
+
+    public function statisticsAsync(Request $request, Mission $mission)
+    {
+        $controlPoints = ControlPoint::where('mission_id', $mission->id)->get();
+        $drones = Drone::where('mission_id', $mission->id)->get();
+        $dataRecords = DataRecord::where('mission_id', $mission->id)->get();
+        $totalRecords = $dataRecords->count();
+
+        $statistics = $this->calculateStatistics($dataRecords, $totalRecords);
+
+        return view('partials.statistics', compact('statistics', 'mission', 'controlPoints', 'drones'));
+    }
+
+    public function recalculateStatistics(Request $request, Mission $mission)
+    {
+        $controlPointId = $request->query('control_point_id');
+        $droneId = $request->query('drone_id');
+
+        Log::info('Received parameters', [
+            'control_point_id' => $controlPointId,
+            'drone_id' => $droneId
+        ]);
+
+        $query = DataRecord::where('mission_id', $mission->id);
+
+        if ($controlPointId) {
+            $query->where('control_point_id', $controlPointId);
+        }
+
+        if ($droneId) {
+            $query->where('drone_id', $droneId);
+        }
+
+        $dataRecords = $query->get();
+        $totalRecordsQuery = DataRecord::where('mission_id', $mission->id);
+        $totalRecords = $totalRecordsQuery->count();
+
+        $statistics = $this->calculateStatistics($dataRecords, $totalRecords);
+        Log::info('Statistics calculated', $statistics);
+
+        $controlPoints = ControlPoint::where('mission_id', $mission->id)->get();
+        $drones = Drone::where('mission_id', $mission->id)->get();
+
+        return view('partials.statistics', compact('statistics', 'mission', 'controlPoints', 'drones'));
+    }
+
+    private function calculateStatistics($dataRecords, $totalRecords)
+    {
+        $totalRecords = $dataRecords->count();
+        $unacceptableData = $dataRecords->where('data_quality', 0)->count();
+        $acceptableData = $dataRecords->where('data_quality', 1)->count();
+        $excellentData = $dataRecords->where('data_quality', 2)->count();
+        $uncollectedData = $dataRecords->where('data_quality', 3)->count();
+
+        $p0 = $totalRecords > 0 ? ($unacceptableData / $totalRecords) * 100 : 0;
+        $p1 = $totalRecords > 0 ? ($acceptableData / $totalRecords) * 100 : 0;
+        $p2 = $totalRecords > 0 ? ($excellentData / $totalRecords) * 100 : 0;
+        $pn = $totalRecords > 0 ? ($uncollectedData / $totalRecords) * 100 : 0;
+
+        return [
+            'w' => $totalRecords,
+            'z0' => $unacceptableData,
+            'z1' => $acceptableData,
+            'z2' => $excellentData,
+            'zn' => $uncollectedData,
+            'p0' => $p0,
+            'p1' => $p1,
+            'p2' => $p2,
+            'pn' => $pn,
+        ];
     }
 
 }

@@ -12,11 +12,14 @@
                 <div class="card">
                     <div class="card-body">
                         <h5 class="card-title justify-content-center">Mission Details</h5>
-                        <p class="card-text"><strong>User ID:</strong> {{ $mission->user ? $mission->user->name : 'User was removed' }}</p>
+                        <p class="card-text"><strong>User
+                                ID:</strong> {{ $mission->user ? $mission->user->name : 'User was removed' }}</p>
                         <p class="card-text"><strong>Status:</strong> {{ $mission->active ? 'Active' : 'Inactive' }}</p>
-                        <p class="card-text"><strong>Automatic:</strong> {{ $mission->automatic ? 'True' : 'False' }}</p>
+                        <p class="card-text"><strong>Automatic:</strong> {{ $mission->automatic ? 'True' : 'False' }}
+                        </p>
                         <p class="card-text"><strong>Created At:</strong> {{ $mission->created_at }}</p>
-                        <p class="card-text"><strong>Total Control Points Count:</strong> {{ $mission->total_cp_count }}</p>
+                        <p class="card-text"><strong>Total Control Points Count:</strong> {{ $mission->total_cp_count }}
+                        </p>
                         <p class="card-text"><strong>Total Drones Count:</strong> {{ $mission->drones_count }}</p>
                     </div>
                 </div>
@@ -103,162 +106,192 @@
             }
         }
 
-        document.querySelectorAll('.navbar-nav a').forEach(navLink => {
-            navLink.addEventListener('click', function (e) {
-                if (!this.getAttribute('data-section')) {
-                    const targetUrl = this.getAttribute('href');
-                    if (targetUrl) {
-                        window.location.href = targetUrl;
+        function loadSectionContent(section, newUrl = null) {
+            const sectionId = section.id;
+            let url;
+
+            switch (sectionId) {
+                case "data-records-section":
+                    url = '{{ route("dataRecord.async", $mission->id) }}';
+                    break;
+                case "drones-section":
+                    url = '{{ route("drones.async", $mission->id) }}';
+                    break;
+                case "control-points-section":
+                    url = '{{ route("controlPoints.async", $mission->id) }}';
+                    break;
+                case "statistics-section":
+                    if(!newUrl) {
+                        url = '{{ route("statistics.async", $mission->id) }}';
+                    } else {
+                        url = newUrl
                     }
-                }
-            });
-        });
-    });
+                    break;
+                default:
+                    console.error('Invalid section id:', sectionId);
+                    return;
+            }
 
-    function loadSectionContent(section) {
-        const sectionId = section.id;
-        let url;
+            console.log(`Loading content from: ${url}`);
 
-        switch (sectionId) {
-            case "data-records-section":
-                url = '{{ route("dataRecord.async", $mission->id) }}';
-                break;
-            case "drones-section":
-                url = '{{ route("drones.async", $mission->id) }}';
-                break;
-            case "control-points-section":
-                url = '{{ route("controlPoints.async", $mission->id) }}';
-                break;
-            case "statistics-section":
-                url = '{{ route("dataRecord.async", $mission->id) }}';
-                break;
-            default:
-                console.error('Invalid section id:', sectionId);
-                return;
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Network response was not ok: ${response.statusText}`);
+                    }
+                    return response.text();
+                })
+                .then(html => {
+                    section.innerHTML = html;
+                    console.log('Section content updated');
+                    initializeFormEvents();
+                })
+                .catch(error => {
+                    console.error('Error loading section content:', error);
+                });
         }
 
-        console.log(`Loading content from: ${url}`);
+        let missionAutomatic = {{ $mission->automatic ? 'true' : 'false' }};
+        let controlPointSelect = document.getElementById('control_point_select');
+        let droneSelect = document.getElementById('drone_select');
+        let recalculateButton = document.getElementById('recalculate-button');
 
-        fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`Network response was not ok: ${response.statusText}`);
-                }
-                return response.text();
-            })
-            .then(html => {
-                section.innerHTML = html;
-                initializeFormEvents();
-            })
-            .catch(error => {
-                console.error('Error loading section content:', error);
-            });
-    }
-
-    function initializeFormEvents() {
-        const controlPoints = @json($controlPoints);
-
-        const addRowButton = document.getElementById('add-row');
-        const controlPointsContainer = document.getElementById('control-points');
-
-        if (controlPointsContainer) {
-            controlPointsContainer.addEventListener('click', function (e) {
-                if (e.target && e.target.classList.contains('remove-row')) {
-                    console.log('Remove button clicked');
-                    e.target.closest('.row').remove();
-                }
-            });
+        if (missionAutomatic === true) {
+            if (controlPointSelect) {
+                controlPointSelect.addEventListener('change', () => {
+                    recalculateStatistics(controlPointSelect.value || 0, droneSelect.value || 0);
+                });
+            }
+            if (droneSelect) {
+                droneSelect.addEventListener('change', () => {
+                    recalculateStatistics(controlPointSelect.value || 0, droneSelect.value || 0);
+                });
+            }
         }
 
-        if (addRowButton) {
-            addRowButton.addEventListener('click', function () {
-                console.log('Add button clicked');
-                let newRow = document.createElement('div');
-                newRow.className = 'row mb-3';
-                newRow.innerHTML = `
-                <div class="col">
-                    <label for="control_point" class="form-label">Control Point:</label>
-                    <select name="control_point[]" class="form-select" required>
-                        ${controlPoints.map(controlPoint =>
-                    `<option value="${controlPoint.id}">
+        if (recalculateButton) {
+            recalculateButton.addEventListener('click', () => {
+                recalculateStatistics(controlPointSelect.value || 0, droneSelect.value || 0);
+            });
+            console.log('Event listener added to recalculateButton');
+        }
+
+        function recalculateStatistics(controlPointId, droneId) {
+            if (!controlPointId) controlPointId = 0;
+            if (!droneId) droneId = 0;
+
+            const url = `/missions/{{ $mission->id }}/statistics-recalculate?control_point_id=${controlPointId}&drone_id=${droneId}`;
+            console.log(`Communicating with server at: ${url}`);
+            console.log(`control_point_id: ${controlPointId}, drone_id: ${droneId}`);
+
+            loadSectionContent(document.getElementById('statistics-section'), url);
+        }
+
+        function initializeFormEvents() {
+            const controlPoints = @json($controlPoints);
+
+            const addRowButton = document.getElementById('add-row');
+            const controlPointsContainer = document.getElementById('control-points');
+
+            if (controlPointsContainer) {
+                controlPointsContainer.addEventListener('click', function (e) {
+                    if (e.target && e.target.classList.contains('remove-row')) {
+                        console.log('Remove button clicked');
+                        e.target.closest('.row').remove();
+                    }
+                });
+            }
+
+            if (addRowButton) {
+                addRowButton.addEventListener('click', function () {
+                    console.log('Add button clicked');
+                    let newRow = document.createElement('div');
+                    newRow.className = 'row mb-3';
+                    newRow.innerHTML = `
+                    <div class="col">
+                        <label for="control_point" class="form-label">Control Point:</label>
+                        <select name="control_point[]" class="form-select" required>
+                            ${controlPoints.map(controlPoint =>
+                        `<option value="${controlPoint.id}">
                                 ${controlPoint.longitude} | ${controlPoint.latitude} | ${controlPoint.data_type}
                             </option>`).join('')}
-                    </select>
-                </div>
-                <div class="col-auto d-flex align-items-end">
-                    <button type="button" class="btn btn-danger remove-row">-</button>
-                </div>
-            `;
-                controlPointsContainer.appendChild(newRow);
-            });
-        }
+                        </select>
+                    </div>
+                    <div class="col-auto d-flex align-items-end">
+                        <button type="button" class="btn btn-danger remove-row">-</button>
+                    </div>
+                `;
+                    controlPointsContainer.appendChild(newRow);
+                });
+            }
 
-        const createDataRecordForm = document.getElementById('create-data-record-form');
-        if (createDataRecordForm) {
-            createDataRecordForm.addEventListener('submit', function (e) {
-                e.preventDefault();
-                console.log('Form submit');
+            const createDataRecordForm = document.getElementById('create-data-record-form');
+            if (createDataRecordForm) {
+                createDataRecordForm.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    console.log('Form submit');
 
-                let form = e.target;
-                let formData = new FormData(form);
-                let controlPoints = formData.getAll('control_point[]');
+                    let form = e.target;
+                    let formData = new FormData(form);
+                    let controlPoints = formData.getAll('control_point[]');
 
-                Promise.all(controlPoints.map(controlPointId => {
-                    let newFormData = new FormData();
-                    newFormData.append('drone_id', formData.get('drone_id'));
-                    newFormData.append('mission_id', formData.get('mission_id'));
-                    newFormData.append('control_point_id', controlPointId);
-                    newFormData.append('_token', formData.get('_token'));
+                    Promise.all(controlPoints.map(controlPointId => {
+                        let newFormData = new FormData();
+                        newFormData.append('drone_id', formData.get('drone_id'));
+                        newFormData.append('mission_id', formData.get('mission_id'));
+                        newFormData.append('control_point_id', controlPointId);
+                        newFormData.append('_token', formData.get('_token'));
 
-                    return fetch('{{ route('dataRecord.store') }}', {
-                        method: 'POST',
-                        body: newFormData
-                    })
-                        .then(response => response.json());
-                }))
-                    .then(results => {
-                        console.log('All data records created', results);
-                        loadSectionContent(document.getElementById('data-records-section'));
-                    })
-                    .catch(error => {
-                        console.error('Error creating data records:', error);
-                    });
-            });
-        }
+                        return fetch('{{ route('dataRecord.store') }}', {
+                            method: 'POST',
+                            body: newFormData
+                        })
+                            .then(response => response.json());
+                    }))
+                        .then(results => {
+                            console.log('All data records created', results);
+                            loadSectionContent(document.getElementById('data-records-section'));
+                        })
+                        .catch(error => {
+                            console.error('Error creating data records:', error);
+                        });
+                });
+            }
 
-        document.querySelectorAll('.delete-record').forEach(button => {
-            button.addEventListener('click', function (e) {
-                e.preventDefault();
+            document.querySelectorAll('.delete-record').forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
 
-                if (!confirm('Are you sure you want to delete this data record?')) {
-                    return;
-                }
-
-                const recordId = this.getAttribute('data-id');
-                const url = `/data-records-ajax/${recordId}`;
-
-                fetch(url, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    if (!confirm('Are you sure you want to delete this data record?')) {
+                        return;
                     }
-                })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`Network response was not ok: ${response.statusText}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.success) {
-                            console.log(`Record with id ${recordId} deleted successfully`);
-                            loadSectionContent(document.getElementById('data-records-section')); // Reload section content
-                        } else {
-                            alert('Failed to delete the data record.');
+
+                    const recordId = this.getAttribute('data-id');
+                    const url = `/data-records-ajax/${recordId}`;
+
+                    fetch(url, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                         }
                     })
-                    .catch(error => console.error('Error:', error));
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error(`Network response was not ok: ${response.statusText}`);
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            if (data.success) {
+                                console.log(`Record with id ${recordId} deleted successfully`);
+                                loadSectionContent(document.getElementById('data-records-section')); // Reload section content
+                            } else {
+                                alert('Failed to delete the data record.');
+                            }
+                        })
+                        .catch(error => console.error('Error:', error));
+                });
             });
-        });
-    }
+        }
+    });
 </script>
