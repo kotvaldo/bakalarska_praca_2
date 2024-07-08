@@ -237,11 +237,14 @@
                 <div class="row mt-3">
                     <div class="col-md-12">
                         <div id="statistics-content">
-                             <p>Total Records: ${statistics.w}</p>
-                            <p>Unacceptable Data: ${statistics.z0} (${statistics.p0}%)</p>
-                            <p>Acceptable Data: ${statistics.z1} (${statistics.p1}%)</p>
-                            <p>Excellent Data: ${statistics.z2} (${statistics.p2}%)</p>
-                            <p>Uncollected Data: ${statistics.zn} (${statistics.pn}%)</p>
+                             <p>W -> Total Records: ${statistics.w}</p>
+                            <p>Z0 -> Unacceptable Data: ${statistics.z0}</p>
+                            <p>Z1 -> Acceptable Data: ${statistics.z1}</p>
+                            <p>Z2 -> Excellent Data: ${statistics.z2}</p>
+                            <p>Zn -> Uncollected Data: ${statistics.zn}</p>
+                            <p>P0 -> Unacceptable + Uncollected Data Percentage: (${statistics.p0}%)</p>
+                            <p>P1 -> Acceptable Data Percentage: (${statistics.p1}%)</p>
+                            <p>P2 -> Excellent Data Percentage: (${statistics.p2}%)</p>
                         </div>
                     </div>
                 </div>

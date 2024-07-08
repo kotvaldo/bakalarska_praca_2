@@ -61,7 +61,7 @@ class MissionController extends Controller
                     return number_format($value, 1) . '%';
                 }
             ])
-            ->setColumn('pn', 'PN', [
+            ->setColumn('w', 'Data Record Count', [
                 'sortable' => true,
                 'has_filters' => true,
                 'wrapper' => function ($value) {
@@ -219,7 +219,7 @@ class MissionController extends Controller
 
         $statistics = $this->calculateStatistics($dataRecords, $totalRecords);
 
-        return view('partials.statistics', compact('statistics', 'mission', 'controlPoints', 'drones'));
+        return view('partials.statistics', compact('statistics', 'mission', 'controlPoints', 'drones'))->render();
     }
 
     public function recalculateStatistics(Request $request, Mission $mission)
@@ -268,10 +268,9 @@ class MissionController extends Controller
         $excellentData = $dataRecords->where('data_quality', 2)->count();
         $uncollectedData = $dataRecords->where('data_quality', 3)->count();
 
-        $p0 = $totalRecords > 0 ? ($unacceptableData / $totalRecords) * 100 : 0;
+        $p0 = $totalRecords > 0 ? (($unacceptableData + $uncollectedData) / $totalRecords) * 100 : 0;
         $p1 = $totalRecords > 0 ? ($acceptableData / $totalRecords) * 100 : 0;
         $p2 = $totalRecords > 0 ? ($excellentData / $totalRecords) * 100 : 0;
-        $pn = $totalRecords > 0 ? ($uncollectedData / $totalRecords) * 100 : 0;
 
         return [
             'w' => $totalRecords,
@@ -282,7 +281,6 @@ class MissionController extends Controller
             'p0' => $p0,
             'p1' => $p1,
             'p2' => $p2,
-            'pn' => $pn,
         ];
     }
 

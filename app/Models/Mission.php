@@ -41,6 +41,7 @@ class Mission extends Model
             ->like('p0')
             ->like('p1')
             ->like('p2')
+            ->like('w')
             ->equal('total_cp_count')
             ->equal('drones_count');
     }

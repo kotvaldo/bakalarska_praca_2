@@ -134,16 +134,16 @@ class DataRecordController extends Controller
         $dataQuality = null;
 
         if ($drone->type != $controlPoint->data_type) {
-            $dataQuality = 0; // Neakceptované údaje
+            $dataQuality = 0;
         } else {
             $randomNumber = rand(1, 100);
 
-            if ($randomNumber <= 60) {
-                $dataQuality = 1; // 60% -> Prijateľné údaje
-            } elseif ($randomNumber <= 90) {
-                $dataQuality = 2; // 30% -> Vynikajúce údaje
+            if ($randomNumber <= 34) {
+                $dataQuality = 1; //
+            } elseif ($randomNumber <= 66) {
+                $dataQuality = 2;
             } else {
-                $dataQuality = 3; // 10% -> Nezozbierané údaje (porucha)
+                $dataQuality = 3;
             }
         }
 
@@ -167,6 +167,19 @@ class DataRecordController extends Controller
             $mission->z2 += 1; // Vynikajúce údaje
         } elseif ($dataQuality == 3) {
             $mission->zn += 1; // Nezozbierané údaje (porucha)
+        }
+
+
+        $totalRecords = $mission->w;
+
+        if ($totalRecords > 0) {
+            $mission->p0 = (($mission->z0 + $mission->zn) / $totalRecords) * 100;
+            $mission->p1 = ($mission->z1 / $totalRecords) * 100;
+            $mission->p2 = ($mission->z2 / $totalRecords) * 100;
+        } else {
+            $mission->p0 = 0;
+            $mission->p1 = 0;
+            $mission->p2 = 0;
         }
 
         $mission->save();
@@ -204,6 +217,17 @@ class DataRecordController extends Controller
             $mission->z2 -= 1;
         } elseif ($dataQuality == 3) {
             $mission->zn -= 1;
+        }
+        $totalRecords = $mission->w;
+
+        if ($totalRecords > 0) {
+            $mission->p0 = (($mission->z0 + $mission->zn) / $totalRecords) * 100;
+            $mission->p1 = ($mission->z1 / $totalRecords) * 100;
+            $mission->p2 = ($mission->z2 / $totalRecords) * 100;
+        } else {
+            $mission->p0 = 0;
+            $mission->p1 = 0;
+            $mission->p2 = 0;
         }
 
         $mission->save();
