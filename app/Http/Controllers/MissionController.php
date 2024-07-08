@@ -65,7 +65,7 @@ class MissionController extends Controller
                 'sortable' => true,
                 'has_filters' => true,
                 'wrapper' => function ($value) {
-                    return number_format($value, 1) . '%';
+                    return $value;
                 }
             ])
             ->setColumn('total_cp_count', 'CP Count', [
