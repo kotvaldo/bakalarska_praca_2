@@ -26,6 +26,38 @@
             </div>
         </div>
 
+        <!-- Statické miesto na zobrazenie výberov dronu a CP -->
+        <div id="statistics-filters" class="mb-3" style="display: none;">
+            <div class="row">
+                <div class="col">
+                    <label for="control_point_select" class="form-label">Control Point:</label>
+                    <select id="control_point_select" name="control_point_select" class="form-select">
+                        <option value="0">All Control_Points</option>
+                        @foreach ($controlPoints as $controlPoint)
+                            <option value="{{ $controlPoint->id }}">{{ $controlPoint->id }}
+                                | {{ $controlPoint->longitude }} | {{ $controlPoint->latitude }}
+                                | {{ $controlPoint->data_type }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col">
+                    <label for="drone_select" class="form-label">Drone:</label>
+                    <select id="drone_select" name="drone_select" class="form-select">
+                        <option value="0">All drones</option>
+                        @foreach ($drones as $drone)
+                            <option value="{{ $drone->id }}">{{ $drone->id }} | {{ $drone->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @if($mission->automatic === false)
+                    <div class="col-auto d-flex align-items-end">
+                        <button id="recalculate-button" class="btn btn-primary">Recalculate Statistics</button>
+                    </div>
+                @endif
+
+            </div>
+        </div>
+
         <ul class="nav nav-tabs mt-4">
             <li class="nav-item">
                 <a class="nav-link active" href="#" data-section="data-records-section">Data Records</a>
@@ -63,6 +95,7 @@
     document.addEventListener('DOMContentLoaded', function () {
         const navLinks = document.querySelectorAll('.nav-link[data-section]');
         const sections = document.querySelectorAll('.page-section');
+        const statisticsFilters = document.getElementById('statistics-filters');
 
         if (sections.length > 0 && navLinks.length > 0) {
             navLinks.forEach(link => {
@@ -94,6 +127,12 @@
                     });
 
                     loadSectionContent(targetSection);
+
+                    if (targetSection.id === 'statistics-section') {
+                        statisticsFilters.style.display = 'block';
+                    } else {
+                        statisticsFilters.style.display = 'none';
+                    }
                 });
             });
 
@@ -121,10 +160,10 @@
                     url = '{{ route("controlPoints.async", $mission->id) }}';
                     break;
                 case "statistics-section":
-                    if(!newUrl) {
+                    if (!newUrl) {
                         url = '{{ route("statistics.async", $mission->id) }}';
                     } else {
-                        url = newUrl
+                        url = newUrl;
                     }
                     break;
                 default:
@@ -145,35 +184,13 @@
                     section.innerHTML = html;
                     console.log('Section content updated');
                     initializeFormEvents();
+                    if(sectionId === "statistics-section" ) {
+                        initializeEventListeners();
+                    }
                 })
                 .catch(error => {
                     console.error('Error loading section content:', error);
                 });
-        }
-
-        let missionAutomatic = {{ $mission->automatic ? 'true' : 'false' }};
-        let controlPointSelect = document.getElementById('control_point_select');
-        let droneSelect = document.getElementById('drone_select');
-        let recalculateButton = document.getElementById('recalculate-button');
-
-        if (missionAutomatic === true) {
-            if (controlPointSelect) {
-                controlPointSelect.addEventListener('change', () => {
-                    recalculateStatistics(controlPointSelect.value || 0, droneSelect.value || 0);
-                });
-            }
-            if (droneSelect) {
-                droneSelect.addEventListener('change', () => {
-                    recalculateStatistics(controlPointSelect.value || 0, droneSelect.value || 0);
-                });
-            }
-        }
-
-        if (recalculateButton) {
-            recalculateButton.addEventListener('click', () => {
-                recalculateStatistics(controlPointSelect.value || 0, droneSelect.value || 0);
-            });
-            console.log('Event listener added to recalculateButton');
         }
 
         function recalculateStatistics(controlPointId, droneId) {
@@ -184,7 +201,98 @@
             console.log(`Communicating with server at: ${url}`);
             console.log(`control_point_id: ${controlPointId}, drone_id: ${droneId}`);
 
-            loadSectionContent(document.getElementById('statistics-section'), url);
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Network response was not ok: ${response.statusText}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Data received from server:', data); // Log received data
+                    if (data) {
+                        updateStatisticsSection(data);
+                        console.log('Section content updated');
+                    } else {
+                        throw new Error('Data is undefined');
+                    }
+                    initializeEventListeners();
+                })
+                .catch(error => {
+                    console.error('Error loading section content:', error);
+                });
+        }
+
+        function updateStatisticsSection(data) {
+            const section = document.getElementById('statistics-section');
+            const statistics = data.statistics;
+
+            section.innerHTML = `
+                <div id="statistics-section" class="row justify-content-center">
+                     <div class="col-md-10 mb-3">
+                        <div class="card">
+                         <div class="card-body">
+                <h5 class="card-title justify-content-center">Statistics</h5>
+
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <div id="statistics-content">
+                             <p>Total Records: ${statistics.w}</p>
+                            <p>Unacceptable Data: ${statistics.z0} (${statistics.p0}%)</p>
+                            <p>Acceptable Data: ${statistics.z1} (${statistics.p1}%)</p>
+                            <p>Excellent Data: ${statistics.z2} (${statistics.p2}%)</p>
+                            <p>Uncollected Data: ${statistics.zn} (${statistics.pn}%)</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+            `;
+        }
+
+        function initializeEventListeners() {
+            let missionAutomatic = {{ $mission->automatic ? 'true' : 'false' }};
+            let controlPointSelect = document.getElementById('control_point_select');
+            let droneSelect = document.getElementById('drone_select');
+            let recalculateButton = document.getElementById('recalculate-button');
+
+
+            if (controlPointSelect) {
+                if ({{ $mission->automatic == 1 }}) {
+                    controlPointSelect.onchange = function () {
+                        console.log('Control Point Select changed');
+                        recalculateStatistics(controlPointSelect.value || 0, droneSelect ? droneSelect.value || 0 : 0);
+                    };
+                } else {
+                    console.log('Mission is not automatic. Control Point Select event not added.');
+                }
+            } else {
+                console.error('Control Point Select element not found.');
+            }
+
+            if (droneSelect) {
+                if ({{ $mission->automatic == 1 }}) {
+                    droneSelect.onchange = function () {
+                        console.log('Drone Select changed');
+                        recalculateStatistics(controlPointSelect ? controlPointSelect.value || 0 : 0, droneSelect.value || 0);
+                    };
+                } else {
+                    console.log('Mission is not automatic. Drone Select event not added.');
+                }
+            } else {
+                console.error('Drone Select element not found.');
+            }
+            if (recalculateButton) {
+                recalculateButton.onclick = function () {
+                    recalculateStatistics(controlPointSelect ? controlPointSelect.value || 0 : 0, droneSelect ? droneSelect.value || 0 : 0);
+                };
+            }
+
+
         }
 
         function initializeFormEvents() {

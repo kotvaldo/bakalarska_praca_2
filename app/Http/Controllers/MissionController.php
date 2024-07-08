@@ -252,7 +252,12 @@ class MissionController extends Controller
         $controlPoints = ControlPoint::where('mission_id', $mission->id)->get();
         $drones = Drone::where('mission_id', $mission->id)->get();
 
-        return view('partials.statistics', compact('statistics', 'mission', 'controlPoints', 'drones'));
+        return response()->json([
+            'statistics' => $statistics,
+            'mission' => $mission,
+            'controlPoints' => $controlPoints,
+            'drones' => $drones
+        ]);
     }
 
     private function calculateStatistics($dataRecords, $totalRecords)
