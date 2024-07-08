@@ -255,7 +255,6 @@
         }
 
         function initializeEventListeners() {
-            let missionAutomatic = {{ $mission->automatic ? 'true' : 'false' }};
             let controlPointSelect = document.getElementById('control_point_select');
             let droneSelect = document.getElementById('drone_select');
             let recalculateButton = document.getElementById('recalculate-button');
