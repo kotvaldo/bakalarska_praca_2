@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Aginev\Datagrid\Datagrid;
+use Aginev\Datagrid\Exceptions\CellException;
 use App\Models\ControlPoint;
 use App\Models\DataRecord;
 use App\Models\Drone;
@@ -13,6 +14,9 @@ use Illuminate\Support\Facades\Log;
 
 class MissionController extends Controller
 {
+    /**
+     * @throws CellException
+     */
     public function index(Request $request)
     {
         $missions = Mission::query()->filter($request->get('f', []))->get();
@@ -217,7 +221,7 @@ class MissionController extends Controller
         $dataRecords = DataRecord::where('mission_id', $mission->id)->get();
         $totalRecords = $dataRecords->count();
 
-        $statistics = $this->calculateStatistics($dataRecords, $totalRecords);
+        $statistics = $this->calculateStatistics($dataRecords);
 
         return view('partials.statistics', compact('statistics', 'mission', 'controlPoints', 'drones'));
     }
@@ -246,7 +250,7 @@ class MissionController extends Controller
         $totalRecordsQuery = DataRecord::where('mission_id', $mission->id);
         $totalRecords = $totalRecordsQuery->count();
 
-        $statistics = $this->calculateStatistics($dataRecords, $totalRecords);
+        $statistics = $this->calculateStatistics($dataRecords);
         Log::info('Statistics calculated', $statistics);
 
         $controlPoints = ControlPoint::where('mission_id', $mission->id)->get();
@@ -260,7 +264,7 @@ class MissionController extends Controller
         ]);
     }
 
-    private function calculateStatistics($dataRecords, $totalRecords)
+    private function calculateStatistics($dataRecords)
     {
         $totalRecords = $dataRecords->count();
         $unacceptableData = $dataRecords->where('data_quality', 0)->count();

@@ -56,13 +56,13 @@
                 <!-- Left Side Of Navbar -->
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{route('mission.index')}}">{{__('Manage missions') }}</a>
+                        <a class="nav-link" href="{{route('mission.index')}}">{{__('Missions') }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{route('drone.index')}}">{{__('Manage drones') }}</a>
+                        <a class="nav-link" href="{{route('drone.index')}}">{{__('Drones') }}</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{route('data_record.index')}}">{{__('Manage data') }}</a>
+                        <a class="nav-link" href="{{route('data_record.index')}}">{{__('Data Records') }}</a>
                     </li>
                 </ul>
 
