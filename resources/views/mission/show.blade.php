@@ -96,6 +96,7 @@
         const navLinks = document.querySelectorAll('.nav-link[data-section]');
         const sections = document.querySelectorAll('.page-section');
         const statisticsFilters = document.getElementById('statistics-filters');
+        const missionAutomatic = {{ $mission->automatic ? 'true' : 'false' }};
 
         if (sections.length > 0 && navLinks.length > 0) {
             navLinks.forEach(link => {
@@ -184,7 +185,7 @@
                     section.innerHTML = html;
                     console.log('Section content updated');
                     initializeFormEvents();
-                    if(sectionId === "statistics-section" ) {
+                    if (sectionId === "statistics-section") {
                         initializeEventListeners();
                     }
                 })
@@ -224,37 +225,16 @@
         }
 
         function updateStatisticsSection(data) {
-            const section = document.getElementById('statistics-section');
             const statistics = data.statistics;
 
-            section.innerHTML = `
-                <div id="statistics-section" class="row justify-content-center">
-                     <div class="col-md-10 mb-3">
-                        <div class="card">
-                         <div class="card-body">
-                <h5 class="card-title justify-content-center">Statistics</h5>
-
-                <div class="row mt-3">
-                    <div class="col-md-12">
-                        <div id="statistics-content">
-                             <p>W -> Total Records: ${statistics.w}</p>
-                            <p>Z0 -> Unacceptable Data: ${statistics.z0}</p>
-                            <p>Z1 -> Acceptable Data: ${statistics.z1}</p>
-                            <p>Z2 -> Excellent Data: ${statistics.z2}</p>
-                            <p>Zn -> Uncollected Data: ${statistics.zn}</p>
-                            <p>P0 -> Unacceptable + Uncollected Data Percentage: (${statistics.p0}%)</p>
-                            <p>P1 -> Acceptable Data Percentage: (${statistics.p1}%)</p>
-                            <p>P2 -> Excellent Data Percentage: (${statistics.p2}%)</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-
-            `;
+            document.getElementById('total-records').innerText = statistics.w;
+            document.getElementById('unacceptable-data').innerText = statistics.z0;
+            document.getElementById('acceptable-data').innerText = statistics.z1;
+            document.getElementById('excellent-data').innerText = statistics.z2;
+            document.getElementById('uncollected-data').innerText = statistics.zn;
+            document.getElementById('unacceptable-percentage').innerText = statistics.p0.toFixed(2);
+            document.getElementById('acceptable-percentage').innerText = statistics.p1.toFixed(2);
+            document.getElementById('excellent-percentage').innerText = statistics.p2.toFixed(2);
         }
 
         function initializeEventListeners() {
@@ -262,9 +242,8 @@
             let droneSelect = document.getElementById('drone_select');
             let recalculateButton = document.getElementById('recalculate-button');
 
-
             if (controlPointSelect) {
-                if ({{ $mission->automatic == 1 }}) {
+                if (missionAutomatic) {
                     controlPointSelect.onchange = function () {
                         console.log('Control Point Select changed');
                         recalculateStatistics(controlPointSelect.value || 0, droneSelect ? droneSelect.value || 0 : 0);
@@ -277,7 +256,7 @@
             }
 
             if (droneSelect) {
-                if ({{ $mission->automatic == 1 }}) {
+                if (missionAutomatic) {
                     droneSelect.onchange = function () {
                         console.log('Drone Select changed');
                         recalculateStatistics(controlPointSelect ? controlPointSelect.value || 0 : 0, droneSelect.value || 0);
@@ -293,8 +272,6 @@
                     recalculateStatistics(controlPointSelect ? controlPointSelect.value || 0 : 0, droneSelect ? droneSelect.value || 0 : 0);
                 };
             }
-
-
         }
 
         function initializeFormEvents() {
@@ -318,19 +295,19 @@
                     let newRow = document.createElement('div');
                     newRow.className = 'row mb-3';
                     newRow.innerHTML = `
-                    <div class="col">
-                        <label for="control_point" class="form-label">Control Point:</label>
-                        <select name="control_point[]" class="form-select" required>
-                            ${controlPoints.map(controlPoint =>
+                <div class="col">
+                    <label for="control_point" class="form-label">Control Point:</label>
+                    <select name="control_point[]" class="form-select" required>
+                        ${controlPoints.map(controlPoint =>
                         `<option value="${controlPoint.id}">
-                                ${controlPoint.longitude} | ${controlPoint.latitude} | ${controlPoint.data_type}
-                            </option>`).join('')}
-                        </select>
-                    </div>
-                    <div class="col-auto d-flex align-items-end">
-                        <button type="button" class="btn btn-danger remove-row">-</button>
-                    </div>
-                `;
+                            ${controlPoint.longitude} | ${controlPoint.latitude} | ${controlPoint.data_type}
+                        </option>`).join('')}
+                    </select>
+                </div>
+                <div class="col-auto d-flex align-items-end">
+                    <button type="button" class="btn btn-danger remove-row">-</button>
+                </div>
+            `;
                     controlPointsContainer.appendChild(newRow);
                 });
             }
@@ -403,5 +380,6 @@
                 });
             });
         }
+
     });
 </script>

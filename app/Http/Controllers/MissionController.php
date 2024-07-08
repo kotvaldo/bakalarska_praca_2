@@ -219,7 +219,7 @@ class MissionController extends Controller
 
         $statistics = $this->calculateStatistics($dataRecords, $totalRecords);
 
-        return view('partials.statistics', compact('statistics', 'mission', 'controlPoints', 'drones'))->render();
+        return view('partials.statistics', compact('statistics', 'mission', 'controlPoints', 'drones'));
     }
 
     public function recalculateStatistics(Request $request, Mission $mission)
