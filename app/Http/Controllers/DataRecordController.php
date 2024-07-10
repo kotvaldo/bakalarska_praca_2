@@ -133,7 +133,8 @@ class DataRecordController extends Controller
 
         $dataQuality = null;
 
-        if ($drone->type != $controlPoint->data_type) {
+        if ($drone->type != $controlPoint->data_type ||
+            ($controlPoint->drone_id != null && $drone->id != $controlPoint->drone_id)) {
             $dataQuality = 0;
         } else {
             $randomNumber = rand(1, 100);

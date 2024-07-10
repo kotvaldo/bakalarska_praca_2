@@ -300,8 +300,12 @@
                     <select name="control_point[]" class="form-select" required>
                         ${controlPoints.map(controlPoint =>
                         `<option value="${controlPoint.id}">
-                            ${controlPoint.longitude} | ${controlPoint.latitude} | ${controlPoint.data_type}
-                        </option>`).join('')}
+                         ID:${controlPoint.id} |
+                         X:${controlPoint.longitude} |
+                         Y:${controlPoint.latitude} |
+                         DATATYPE:${controlPoint.data_type} |
+                         DRONE_LIMIT:${controlPoint.drone_id ?? 'NONE'}
+                   </option>`).join('')}
                     </select>
                 </div>
                 <div class="col-auto d-flex align-items-end">

@@ -63,7 +63,7 @@
                 <label for="drone" class="form-label">Drone:</label>
                 <select id="drone" name="drone_id" class="form-select" required>
                     @foreach($drones as $drone)
-                        <option value="{{ $drone->id }}">{{ $drone->name }} | {{ $drone->type }}</option>
+                        <option value="{{ $drone->id }}">ID:{{ $drone->id }} | NAME:{{ $drone->name }} | DATATYPE:{{ $drone->type }}</option>
                     @endforeach
                 </select>
             </div>
@@ -78,7 +78,11 @@
                         <select name="control_point[]" class="form-select" required>
                             @foreach($controlPoints as $controlPoint)
                                 <option value="{{ $controlPoint->id }}">
-                                    {{ $controlPoint->longitude }} | {{ $controlPoint->latitude }} | {{ $controlPoint->data_type }}
+                                    ID:{{ $controlPoint->id }} |
+                                    X:{{ $controlPoint->longitude }} |
+                                    Y:{{ $controlPoint->latitude }} |
+                                    DATATYPE:{{ $controlPoint->data_type }} |
+                                    DRONE_LIMIT:{{ $controlPoint->drone_id ?? 'NONE' }}
                                 </option>
                             @endforeach
                         </select>
