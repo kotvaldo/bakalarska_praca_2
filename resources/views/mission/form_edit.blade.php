@@ -37,7 +37,7 @@
         <label for="drones">Select Drones <span style="color: red">*</span></label>
         <select class="form-control large-select" id="drones" name="drones[]" multiple required style="height: 400px;">
             @foreach($drones as $drone)
-                <option value="{{ $drone->id }}" {{ in_array($drone->id, old('drones', $selectedDrones)) ? 'selected' : '' }}>{{ $drone->name }} | {{ $drone->type }}</option>
+                <option value="{{ $drone->id }}" {{ in_array($drone->id, old('drones', $selectedDrones)) ? 'selected' : '' }}>ID:{{ $drone->id }} | Name:{{ $drone->name }} | DATA_TYPE:{{ $drone->type }}</option>
             @endforeach
         </select>
     </div>
