@@ -9,6 +9,7 @@ use App\Models\Drone;
 use App\Models\Mission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class DataRecordController extends Controller
 {
@@ -64,7 +65,7 @@ class DataRecordController extends Controller
             ->setColumn('drone_name', 'Drone Name', [
                 'sortable' => true,
                 'has_filters' => true,
-                'filters' => Drone::pluck('name', 'id')->toArray(),
+                'filters' => Drone::pluck('name')->toArray(),
                 'wrapper' => function ($value, $row) {
                     $droneName = Drone::find($row->drone_id)->name ?? 'None';
                     return $droneName;
@@ -81,13 +82,6 @@ class DataRecordController extends Controller
             ->setColumn('data_quality', 'Data Quality', [
                 'sortable' => true,
                 'has_filters' => true,
-                'filters' => [
-                    null => 'All',
-                    0 => 'Unacceptable Data',
-                    1 => 'Acceptable Data',
-                    2 => 'Excellent Data',
-                    3 => 'Uncollected Data (Malfunction)',
-                ],
                 'wrapper' => function ($value, $row) {
                     switch ($value) {
                         case 0:
@@ -106,7 +100,8 @@ class DataRecordController extends Controller
             ->setColumn('created_at', 'Created At', ['sortable' => true, 'has_filters' => true])
             ->setActionColumn([
                 'wrapper' => function ($value, $row) {
-                    return (Auth::user()->can('delete', $row->getData()) ? '<a href="' . route('dataRecord.destroy', $row->id) . '" title="Delete" class="btn btn-sm btn-danger" onclick="return confirm(\'Are you sure ?\')"><i class="bi bi-trash"></i></a>' : '');
+                    return (Auth::user()->can('update', $row->getData()) ? '<a href="' . route('data_record.edit', [$row->id]) . '" title="Edit" class="btn btn-sm btn-primary"><i class="bi bi-pencil-square"></i></a> ' : '') .
+                        (Auth::user()->can('delete', $row->getData()) ? '<a href="' . route('dataRecord.destroy', $row->id) . '" title="Delete" class="btn btn-sm btn-danger" onclick="return confirm(\'Are you sure ?\')"><i class="bi bi-trash"></i></a>' : '');
                 }
             ]);
 
@@ -115,6 +110,29 @@ class DataRecordController extends Controller
         ]);
     }
 
+    public function edit(DataRecord $dataRecord)
+    {
+        return view('data_record.edit', [
+            'action' => route('data_record.update', $dataRecord->id),
+            'method' => 'put',
+            'model' => $dataRecord
+        ]);
+    }
+
+    public function update(Request $request, DataRecord $dataRecord)
+    {
+        $request->validate([
+            'data_quality' => 'required|integer|between:0,3',
+        ]);
+
+        $dataRecord->update(['data_quality' => $request->data_quality]);
+
+        $dataQuality = $request->data_quality;
+        $mission = Mission::find($dataRecord->mission_id);
+        $this->updateMissionDetails($mission, $dataQuality);
+
+        return redirect()->route('data_record.index')->with('alert', 'Data quality updated successfully.');
+    }
     public function async(Mission $mission)
     {
         // Načítanie údajov misie, dronov a kontrolných bodov
@@ -127,24 +145,17 @@ class DataRecordController extends Controller
 
     public function store(Request $request)
     {
-
         $drone = Drone::find($request->input('drone_id'));
         $controlPoint = ControlPoint::find($request->input('control_point_id'));
 
         $dataQuality = null;
 
-        if ($drone->type != $controlPoint->data_type ||
-            ($controlPoint->drone_id != null && $drone->id != $controlPoint->drone_id)) {
+        if ($drone->type != $controlPoint->data_type) {
             $dataQuality = 0;
-        } else {
-            $randomNumber = rand(1, 100);
-
-            if ($randomNumber <= 34) {
-                $dataQuality = 1; //
-            } elseif ($randomNumber <= 66) {
-                $dataQuality = 2;
-            } else {
-                $dataQuality = 3;
+        }
+        if($controlPoint->drone_id != null) {
+            if($drone->id != $controlPoint->drone_id) {
+                $dataQuality = 0;
             }
         }
 
@@ -156,35 +167,8 @@ class DataRecordController extends Controller
         $dataRecord->data_quality = $dataQuality;
         $dataRecord->save();
 
-        // Aktualizujeme údaje o misii
         $mission = Mission::find($request->input('mission_id'));
-        $mission->w += 1; // Zvýšime celkový počet dátových záznamov
-
-        if ($dataQuality == 0) {
-            $mission->z0 += 1; // Neakceptované údaje
-        } elseif ($dataQuality == 1) {
-            $mission->z1 += 1; // Prijateľné údaje
-        } elseif ($dataQuality == 2) {
-            $mission->z2 += 1; // Vynikajúce údaje
-        } elseif ($dataQuality == 3) {
-            $mission->zn += 1; // Nezozbierané údaje (porucha)
-        }
-
-
-        $totalRecords = $mission->w;
-
-        if ($totalRecords > 0) {
-            $mission->p0 = (($mission->z0 + $mission->zn) / $totalRecords) * 100;
-            $mission->p1 = ($mission->z1 / $totalRecords) * 100;
-            $mission->p2 = ($mission->z2 / $totalRecords) * 100;
-        } else {
-            $mission->p0 = 0;
-            $mission->p1 = 0;
-            $mission->p2 = 0;
-        }
-
-        $mission->save();
-
+        $this->updateMissionDetails($mission, $dataQuality);
         return response()->json($dataRecord);
     }
 
@@ -231,6 +215,81 @@ class DataRecordController extends Controller
             $mission->p2 = 0;
         }
 
+        $mission->save();
+    }
+    public function editAjax($id)
+    {
+        $dataRecord = DataRecord::findOrFail($id);
+        return response()->json($dataRecord);
+    }
+
+    public function updateAjax(Request $request, $id)
+    {
+        try {
+            $dataRecord = DataRecord::findOrFail($id);
+            Log::info('Update request data:', $request->all());
+
+            $dataQuality = $request->input('data_quality');
+
+            // Check if data_quality is null
+            if (is_null($dataQuality)) {
+                Log::info('data_quality is null');
+            } else {
+                Log::info('data_quality is not null', ['data_quality' => $dataQuality]);
+            }
+
+            // Log current state of the record before updating
+            Log::info('Current DataRecord:', $dataRecord->toArray());
+
+            // Update the data quality
+            $dataRecord->data_quality = $dataQuality;
+            Log::info('Data Quality to be updated:', ['data_quality' => $dataRecord->data_quality]);
+
+            // Save the record
+            $dataRecord->save();
+
+            // Log updated state of the record
+            Log::info('Updated DataRecord:', $dataRecord->toArray());
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            // Log any exception that occurs
+            Log::error('Error updating DataRecord:', ['message' => $e->getMessage(), 'stack' => $e->getTraceAsString()]);
+
+            // Return a detailed error response
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'stack' => $e->getTraceAsString()
+            ], 500);
+        }
+    }
+
+    public function updateMissionDetails($mission, $dataQuality)
+    {
+        $mission->w += 1; // Zvýšime celkový počet dátových záznamov
+
+        if ($dataQuality == 0) {
+            $mission->z0 += 1; // Neakceptované údaje
+        } elseif ($dataQuality == 1) {
+            $mission->z1 += 1; // Prijateľné údaje
+        } elseif ($dataQuality == 2) {
+            $mission->z2 += 1; // Vynikajúce údaje
+        } elseif ($dataQuality == 3) {
+            $mission->zn += 1; // Nezozbierané údaje (porucha)
+        }
+
+        $totalRecords = $mission->w;
+
+        if ($totalRecords > 0) {
+            $mission->p0 = (($mission->z0 + $mission->zn) / $totalRecords) * 100;
+            $mission->p1 = ($mission->z1 / $totalRecords) * 100;
+            $mission->p2 = ($mission->z2 / $totalRecords) * 100;
+        } else {
+            $mission->p0 = 0;
+            $mission->p1 = 0;
+            $mission->p2 = 0;
+        }
         $mission->save();
     }
 

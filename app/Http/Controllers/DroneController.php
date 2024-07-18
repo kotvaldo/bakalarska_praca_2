@@ -56,7 +56,7 @@ class DroneController extends Controller
             'name' => 'required',
             'serial_number' => 'required',
             'type' => 'required',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
         $avatarName = null;
         if ($request->hasFile('image')) {
@@ -94,7 +94,7 @@ class DroneController extends Controller
             'name' => 'required',
             'serial_number' => 'required',
             'type' => 'required',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'image' => 'image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
         $oldImage = null;
@@ -116,6 +116,7 @@ class DroneController extends Controller
                 unlink($oldImagePath);
             }
         }
+        return redirect()->route('drone.index')->with('alert', 'Drone was updated successfully.');
     }
     public function destroy(Drone $drone)
     {

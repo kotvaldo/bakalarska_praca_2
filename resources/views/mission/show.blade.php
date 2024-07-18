@@ -34,9 +34,9 @@
                     <select id="control_point_select" name="control_point_select" class="form-select">
                         <option value="0">All Control_Points</option>
                         @foreach ($controlPoints as $controlPoint)
-                            <option value="{{ $controlPoint->id }}">{{ $controlPoint->id }}
-                                | {{ $controlPoint->longitude }} | {{ $controlPoint->latitude }}
-                                | {{ $controlPoint->data_type }}</option>
+                            <option value="{{ $controlPoint->id }}">ID:{{ $controlPoint->id }}
+                                | X:{{ $controlPoint->latitude }} | Y:{{ $controlPoint->longitude }}
+                                | DATA_TYPE:{{$controlPoint->data_type }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -45,7 +45,8 @@
                     <select id="drone_select" name="drone_select" class="form-select">
                         <option value="0">All drones</option>
                         @foreach ($drones as $drone)
-                            <option value="{{ $drone->id }}">{{ $drone->id }} | {{ $drone->name }}</option>
+                            <option value="{{ $drone->id }}">ID:{{ $drone->id }} | NAME:{{ $drone->name }} |
+                                DATA_TYPE: {{ $drone->type }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -97,6 +98,7 @@
         const sections = document.querySelectorAll('.page-section');
         const statisticsFilters = document.getElementById('statistics-filters');
         const missionAutomatic = {{ $mission->automatic ? 'true' : 'false' }};
+        const formContainer = document.getElementById('dynamic-form-container');
 
         if (sections.length > 0 && navLinks.length > 0) {
             navLinks.forEach(link => {
@@ -184,7 +186,9 @@
                 .then(html => {
                     section.innerHTML = html;
                     console.log('Section content updated');
-                    initializeFormEvents();
+                    if (sectionId === "data-records-section") {
+                        initializeFormEvents();
+                    }
                     if (sectionId === "statistics-section") {
                         initializeEventListeners();
                     }
@@ -278,7 +282,7 @@
             const controlPoints = @json($controlPoints);
 
             const addRowButton = document.getElementById('add-row');
-            const controlPointsContainer = document.getElementById('control-points');
+            const controlPointsContainer = document.getElementById('control-points-path');
 
             if (controlPointsContainer) {
                 controlPointsContainer.addEventListener('click', function (e) {
@@ -292,20 +296,21 @@
             if (addRowButton) {
                 addRowButton.addEventListener('click', function () {
                     console.log('Add button clicked');
+                    const rowCount = document.querySelectorAll('#control-points-path .row').length;
                     let newRow = document.createElement('div');
                     newRow.className = 'row mb-3';
                     newRow.innerHTML = `
                 <div class="col">
-                    <label for="control_point" class="form-label">Control Point:</label>
-                    <select name="control_point[]" class="form-select" required>
-                        ${controlPoints.map(controlPoint =>
-                        `<option value="${controlPoint.id}">
-                         ID:${controlPoint.id} |
-                         X:${controlPoint.longitude} |
-                         Y:${controlPoint.latitude} |
-                         DATATYPE:${controlPoint.data_type} |
-                         DRONE_LIMIT:${controlPoint.drone_id ?? 'NONE'}
-                   </option>`).join('')}
+                    <label for="control_point_${rowCount}" class="form-label">Control Point:</label>
+                    <select id="control_point_${rowCount}" name="control_point[]" class="form-select" required>
+                        ${controlPoints.map(controlPoint => `
+                        <option value="${controlPoint.id}">
+                            ID:${controlPoint.id} |
+                            X:${controlPoint.longitude} |
+                            Y:${controlPoint.latitude} |
+                            DATATYPE:${controlPoint.data_type} |
+                            DRONE_LIMIT:${controlPoint.drone_id ?? 'NONE'}
+                        </option>`).join('')}
                     </select>
                 </div>
                 <div class="col-auto d-flex align-items-end">
@@ -381,6 +386,100 @@
                             }
                         })
                         .catch(error => console.error('Error:', error));
+                });
+            });
+            document.querySelectorAll('.edit-record').forEach(button => {
+                button.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    const recordId = this.getAttribute('data-id');
+                    const url = `/data-records/${recordId}/edit-ajax`;
+
+                    // Fetch data for the record
+                    fetch(url)
+                        .then(response => response.json())
+                        .then(dataRecord => {
+                            // Zobrazenie formulára na úpravu v dynamickom div-e
+                            const formContainer = document.getElementById('dynamic-form-container');
+                            formContainer.style.display = 'block';
+                            formContainer.innerHTML = `
+ <div class="row justify-content-center">
+            <div class="col-md-6 mb-3">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title">Edit Data Record</h5>
+                            <form id="edit-data-record-form">
+                                <div class="form-group mb-2">
+                                    <p class="form-control-plaintext"><strong>Data Record ID: </strong> ${dataRecord.id}</p>
+                                </div>
+                                <div class="form-group mb-2">
+                                    <p class="form-control-plaintext"><strong>CP ID: </strong> ${dataRecord.control_point_id}</p>
+                                </div>
+                                <div class="form-group mb-2">
+                                    <p class="form-control-plaintext"><strong>Drone ID: </strong>${dataRecord.drone_id}</p>
+                                </div>
+                                <div class="form-group mb-2">
+                                    <strong>Data Quality: </strong>
+                                    <select class="form-control" id="edit-data-quality" name="data_quality" required>
+                                        <option value="" ${dataRecord.data_quality === null ? 'selected' : ''}>Select Data Quality</option>
+                                        <option value="0" ${dataRecord.data_quality === 0 ? 'selected' : ''}>Unacceptable Data</option>
+                                        <option value="1" ${dataRecord.data_quality === 1 ? 'selected' : ''}>Acceptable Data</option>
+                                        <option value="2" ${dataRecord.data_quality === 2 ? 'selected' : ''}>Excellent Data</option>
+                                        <option value="3" ${dataRecord.data_quality === 3 ? 'selected' : ''}>Uncollected Data (Malfunction)</option>
+                                    </select>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Submit</button>
+                                <button type="button" class="btn btn-secondary" id="cancel-button">Cancel</button>
+                            </form>
+                        </div>
+                    </div>
+</div>
+                    </div>
+                `;
+
+                            // Handle form submission
+                            document.getElementById('edit-data-record-form').addEventListener('submit', function (e) {
+                                e.preventDefault();
+
+                                const formData = new FormData(this);
+
+                                // Log FormData for debugging
+                                console.log('FormData entries:');
+                                for (let [key, value] of formData.entries()) {
+                                    console.log(`${key}: ${value}`);
+                                }
+
+                                fetch(`/data-records/${dataRecord.id}/update-ajax`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                        'Accept': 'application/json',
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify(Object.fromEntries(formData))
+                                })
+                                    .then(response => response.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            console.log(`Record with id ${dataRecord.id} updated successfully`);
+                                            console.log('Server response:', data); // Log server response for debugging
+                                            loadSectionContent(document.getElementById('data-records-section')); // Reload section content
+                                            formContainer.style.display = 'none';
+                                            formContainer.innerHTML = '';
+                                        } else {
+                                            alert('Failed to update the data record.');
+                                        }
+                                    })
+                                    .catch(error => console.error('Error:', error));
+                            });
+
+                            // Handle cancel button
+                            document.getElementById('cancel-button').addEventListener('click', function () {
+                                formContainer.style.display = 'none';
+                                formContainer.innerHTML = '';
+                            });
+                        })
+                        .catch(error => console.error('Error fetching data record:', error));
                 });
             });
         }

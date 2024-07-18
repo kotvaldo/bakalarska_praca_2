@@ -17,7 +17,7 @@
                 <td>{{ $controlPoint->data_type }}</td>
                 <td>{{ $controlPoint->latitude }}</td>
                 <td>{{ $controlPoint->longitude }}</td>
-                <td>{{ $controlPoint->drone_id ?? 'None' }}</td>
+                <td>{{ $controlPoint->drone_id  ?? 'No limitations'}}</td>
             </tr>
         @endforeach
         </tbody>

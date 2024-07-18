@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('mission_id')->nullable()->constrained('missions')->onDelete('set null')->onUpdate('cascade');
             $table->foreignId('control_point_id')->nullable()->constrained('control_points')->onDelete('set null')->onUpdate('cascade');
             $table->foreignId('drone_id')->nullable()->constrained('drones')->onDelete('set null')->onUpdate('cascade');
-            $table->integer('data_quality')->nullable();
+            $table->integer('data_quality')->nullable()->default(null);
             $table->timestamps();
         });
     }

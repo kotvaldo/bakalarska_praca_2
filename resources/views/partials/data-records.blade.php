@@ -1,13 +1,15 @@
 <div class="container mt-5">
+    <div id="dynamic-form-container" class="mb-3" style="display: none;"></div>
     <h2>Data Records</h2>
     <table id="data-records-table" class="table table-striped">
         <thead>
         <tr>
             <th>ID</th>
             <th>Mission</th>
-            <th>Control Point X</th>
-            <th>Control Point Y</th>
-            <th>Control Point DataType</th>
+            <th>CP ID</th>
+            <th>CP X</th>
+            <th>CP Y</th>
+            <th>CP DataType</th>
             <th>Drone Name</th>
             <th>Drone DataType</th>
             <th>Data Quality</th>
@@ -20,36 +22,53 @@
             <tr>
                 <td>{{ $dataRecord->id }}</td>
                 <td>{{ $dataRecord->mission_id ? $dataRecord->mission->name : 'None' }}</td>
-                <td>{{ $dataRecord->control_point_id ? $dataRecord->controlPoint->latitude: 'CP was Removed' }}</td>
-                <td>{{ $dataRecord->control_point_id ? $dataRecord->controlPoint->longitude : 'CP was Removed' }}</td>
-                <td>{{ $dataRecord->control_point_id ?  $dataRecord->controlPoint->data_type: 'CP was Removed' }}</td>
-                <td>{{ $dataRecord->drone_id ? $dataRecord->drone->name : 'Drone was Removed' }}</td>
-                <td>{{ $dataRecord->drone_id ? $dataRecord->drone->type : 'Drone was Removed' }}</td>
+                @if($dataRecord->control_point_id)
+                    <td>{{ $dataRecord->controlPoint->id }}</td>
+                    <td>{{ $dataRecord->controlPoint->latitude }}</td>
+                    <td>{{ $dataRecord->controlPoint->longitude }}</td>
+                    <td>{{ $dataRecord->controlPoint->data_type }}</td>
+                @else
+                    <td>CP was Removed</td>
+                    <td>CP was Removed</td>
+                    <td>CP was Removed</td>
+                    <td>CP was Removed</td>
+                @endif
+                @if($dataRecord->drone_id)
+                    <td>{{ $dataRecord->drone->name }}</td>
+                    <td>{{ $dataRecord->drone->type }}</td>
+                @else
+                    <td>Drone was Removed</td>
+                    <td>Drone was Removed</td>
+                @endif
                 <td>
-                    @switch($dataRecord->data_quality)
-                        @case(0)
-                            Unacceptable Data
-                            @break
-                        @case(1)
-                            Acceptable Data
-                            @break
-                        @case(2)
-                            Excellent Data
-                            @break
-                        @case(3)
-                            Uncollected Data (Failure)
-                            @break
-                        @default
-                            Unknown Quality
-                    @endswitch
+                    @if(is_null($dataRecord->data_quality))
+                        Not Chosen / NULL
+                    @else
+                        @switch($dataRecord->data_quality)
+                            @case(0)
+                                Unacceptable Data
+                                @break
+                            @case(1)
+                                Acceptable Data
+                                @break
+                            @case(2)
+                                Excellent Data
+                                @break
+                            @case(3)
+                                Uncollected Data (Failure)
+                                @break
+                            @default
+                                Unknown Quality
+                        @endswitch
+                    @endif
                 </td>
                 <td>{{ $dataRecord->created_at }}</td>
                 <td>
+                    <button type="button" class="btn btn-sm btn-primary edit-record" data-id="{{ $dataRecord->id }}">Edit</button>
                     <button type="button" class="btn btn-sm btn-danger delete-record" data-id="{{ $dataRecord->id }}">Delete</button>
                 </td>
             </tr>
         @endforeach
-
         </tbody>
     </table>
 </div>
@@ -71,16 +90,16 @@
             <input type="hidden" name="mission_id" value="{{ $mission->id }}">
 
             <h3>Path</h3>
-            <div id="control-points">
+            <div id="control-points-path">
                 <div class="row mb-3">
                     <div class="col">
-                        <label for="control_point" class="form-label">Control Point:</label>
-                        <select name="control_point[]" class="form-select" required>
+                        <label for="control_point_0" class="form-label">Control Point:</label>
+                        <select id="control_point_0" name="control_point[]" class="form-select" required>
                             @foreach($controlPoints as $controlPoint)
                                 <option value="{{ $controlPoint->id }}">
                                     ID:{{ $controlPoint->id }} |
-                                    X:{{ $controlPoint->longitude }} |
-                                    Y:{{ $controlPoint->latitude }} |
+                                    X:{{ $controlPoint->latitude }} |
+                                    Y:{{ $controlPoint->longitude }} |
                                     DATATYPE:{{ $controlPoint->data_type }} |
                                     DRONE_LIMIT:{{ $controlPoint->drone_id ?? 'NONE' }}
                                 </option>
@@ -101,5 +120,3 @@
         </div>
     @endif
 </div>
-
-
