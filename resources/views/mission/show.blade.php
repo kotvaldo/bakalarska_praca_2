@@ -98,7 +98,6 @@
         const sections = document.querySelectorAll('.page-section');
         const statisticsFilters = document.getElementById('statistics-filters');
         const missionAutomatic = {{ $mission->automatic ? 'true' : 'false' }};
-        const formContainer = document.getElementById('dynamic-form-container');
 
         if (sections.length > 0 && navLinks.length > 0) {
             navLinks.forEach(link => {
