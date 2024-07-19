@@ -40,7 +40,15 @@ class DroneController extends Controller
         ]);
     }
 
+    public function factory(Request $request) {
+        $request->validate([
+            'count' => 'required|integer|min:1',
+        ]);
 
+        Drone::factory()->count($request->input('count'))->create();
+
+        return redirect()->route('drone.index')->with('alert', 'was successfully created!');
+    }
     public function create() {
         $droneTypes = ['IMAGE', 'SIGNAL', 'NUMBER'];
         return view('drone.create', [

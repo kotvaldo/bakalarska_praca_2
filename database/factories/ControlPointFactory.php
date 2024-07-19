@@ -19,8 +19,8 @@ class ControlPointFactory extends Factory
         return [
             'data_type' => $this->faker->randomElement($types),
             'drone_id' => null, // Default value
-            'latitude' => $this->faker->latitude,
-            'longitude' => $this->faker->longitude,
+            'latitude' => $this->faker->numberBetween(0,200),
+            'longitude' => $this->faker->numberBetween(0,300),
         ];
     }
 

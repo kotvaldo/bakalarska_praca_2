@@ -90,8 +90,6 @@ class MissionController extends Controller
             'grid' => $grid
         ]);
     }
-
-
     public function create()
     {
         $drones = Drone::whereNull('mission_id')->get();

@@ -12,6 +12,11 @@
                         </div>
                     </div>
                 @endif
+                    <div class="form-group text-danger mb-2">
+                        @foreach ($errors->all() as $error)
+                            {{ $error }}<br>
+                        @endforeach
+                    </div>
                 <div class="row">
                     @can('create', App\Models\Drone::class)
                         <div class="mb-3">
@@ -19,6 +24,17 @@
                                     class="bi bi-plus-circle"></i> {{ __('Add new drone') }}</a>
                         </div>
                     @endcan
+                        <div class="mb-3">
+                            <form action="{{ route('drone.factory') }}" method="POST">
+                                @csrf
+                                <div class="input-group">
+                                    <input type="number" name="count" id="count" class="form-control" placeholder="{{ __('Number of drones') }}" min="1" required>
+                                    <button type="submit" class="btn btn-sm btn-success">
+                                        <i class="bi bi-plus-circle"></i> {{ __('Factory drones') }}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                 </div>
                 <div class="row">
                     {!! $grid->show() !!}

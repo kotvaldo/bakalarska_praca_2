@@ -40,7 +40,7 @@ Route::group(['middleware' => ['auth']], function () {
     Route::get('/mission/{mission}/delete', [\App\Http\Controllers\MissionController::class, 'destroy'])->name('mission.delete');
     Route::resource('data_record', DataRecordController::class);
     Route::get('/data-records/{dataRecord}/delete', [DataRecordController::class, 'destroy'])->name('dataRecord.destroy');
-
+    Route::post('/drone/factory', [DroneController::class, 'factory'])->name('drone.factory');
 
     Route::get('/missions/{mission}/data-records-async', [DataRecordController::class, 'async'])->name('dataRecord.async');
     Route::post('/data-records/store', [DataRecordController::class, 'store'])->name('dataRecord.store');
