@@ -23,7 +23,8 @@ class Drone extends Model
         $this->filter->like('name')
             ->like('type')
             ->like('serial_number')
-            ->like('mission_id');
+            ->like('mission_id')
+            ->equal('id');
     }
 
     public function getMissionIdAttribute($value)

@@ -18,7 +18,9 @@ class DroneController extends Controller
 
         $grid = new Datagrid($drones, $request->get('f', []));
 
-        $grid->setColumn('name', 'Name', ['sortable' => true, 'has_filters' => true])
+        $grid
+            ->setColumn('id', 'ID', ['sortable' => true, 'has_filters' => true])
+            ->setColumn('name', 'Name', ['sortable' => true, 'has_filters' => true])
             ->setColumn('type', 'Type', ['sortable' => true, 'has_filters' => true])
             ->setColumn('serial_number', 'Serial Number', ['sortable' => true, 'has_filters' => true])
             ->setColumn('mission_id', 'Mission', [
@@ -44,10 +46,14 @@ class DroneController extends Controller
         $request->validate([
             'count' => 'required|integer|min:1',
         ]);
+        $count = $request->input('count');
+        Drone::factory()->count($count)->create();
+        if($count == 1) {
+           return redirect()->route('drone.index')->with('alert', $count . ' drone was successfully created!');
+        } else {
+            return redirect()->route('drone.index')->with('alert', $count . ' drones were successfully created!');
+        }
 
-        Drone::factory()->count($request->input('count'))->create();
-
-        return redirect()->route('drone.index')->with('alert', 'was successfully created!');
     }
     public function create() {
         $droneTypes = ['IMAGE', 'SIGNAL', 'NUMBER'];
