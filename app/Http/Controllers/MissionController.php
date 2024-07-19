@@ -219,7 +219,6 @@ class MissionController extends Controller
         $controlPoints = ControlPoint::where('mission_id', $mission->id)->get();
         $drones = Drone::where('mission_id', $mission->id)->get();
         $dataRecords = DataRecord::where('mission_id', $mission->id)->get();
-        $totalRecords = $dataRecords->count();
 
         $statistics = $this->calculateStatistics($dataRecords);
 
@@ -267,10 +266,12 @@ class MissionController extends Controller
     private function calculateStatistics($dataRecords)
     {
         $totalRecords = $dataRecords->count();
-        $unacceptableData = $dataRecords->where('data_quality', 0)->count();
-        $acceptableData = $dataRecords->where('data_quality', 1)->count();
-        $excellentData = $dataRecords->where('data_quality', 2)->count();
-        $uncollectedData = $dataRecords->where('data_quality', 3)->count();
+        $validDataRecords = $dataRecords->whereNotNull('data_quality');
+
+        $unacceptableData = $validDataRecords->where('data_quality', 0)->count();
+        $acceptableData = $validDataRecords->where('data_quality', 1)->count();
+        $excellentData = $validDataRecords->where('data_quality', 2)->count();
+        $uncollectedData = $validDataRecords->where('data_quality', 3)->count();
 
         $p0 = $totalRecords > 0 ? (($unacceptableData + $uncollectedData) / $totalRecords) * 100 : 0;
         $p1 = $totalRecords > 0 ? ($acceptableData / $totalRecords) * 100 : 0;

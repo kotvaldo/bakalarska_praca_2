@@ -50,11 +50,10 @@
                         @endforeach
                     </select>
                 </div>
-                @if($mission->automatic === false)
-                    <div class="col-auto d-flex align-items-end">
-                        <button id="recalculate-button" class="btn btn-primary">Recalculate Statistics</button>
-                    </div>
-                @endif
+
+                <div class="col-auto d-flex align-items-end">
+                    <button id="recalculate-button" class="btn btn-primary">Recalculate Statistics</button>
+                </div>
 
             </div>
         </div>

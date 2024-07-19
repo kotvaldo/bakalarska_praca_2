@@ -124,15 +124,13 @@ class DataRecordController extends Controller
         $request->validate([
             'data_quality' => 'required|integer|between:0,3',
         ]);
-
+        $mission = Mission::where('id', $dataRecord->mission_id)->first();
         $dataRecord->update(['data_quality' => $request->data_quality]);
-
-        $dataQuality = $request->data_quality;
-        $mission = Mission::find($dataRecord->mission_id);
-        $this->updateMissionDetails($mission, $dataQuality);
+        $this->updateMissionDetails($mission);
 
         return redirect()->route('data_record.index')->with('alert', 'Data quality updated successfully.');
     }
+
     public function async(Mission $mission)
     {
         // Načítanie údajov misie, dronov a kontrolných bodov
@@ -153,8 +151,8 @@ class DataRecordController extends Controller
         if ($drone->type != $controlPoint->data_type) {
             $dataQuality = 0;
         }
-        if($controlPoint->drone_id != null) {
-            if($drone->id != $controlPoint->drone_id) {
+        if ($controlPoint->drone_id != null) {
+            if ($drone->id != $controlPoint->drone_id) {
                 $dataQuality = 0;
             }
         }
@@ -167,56 +165,28 @@ class DataRecordController extends Controller
         $dataRecord->data_quality = $dataQuality;
         $dataRecord->save();
 
-        $mission = Mission::find($request->input('mission_id'));
-        $this->updateMissionDetails($mission, $dataQuality);
+        $mission = Mission::where('id', $dataRecord->mission_id)->first();
+        $this->updateMissionDetails($mission);
         return response()->json($dataRecord);
     }
 
     public function destroy(DataRecord $dataRecord)
     {
-        $this->missionFix($dataRecord);
+        $mission = Mission::where('id', $dataRecord->mission_id)->first();
         $dataRecord->delete();
+        $this->updateMissionDetails($mission);
         return redirect()->route('data_record.index')->with('alert', 'DataRecord was successfully removed!');
     }
 
     public function destroyAjax(DataRecord $dataRecord)
     {
-        $this->missionFix($dataRecord);
+        $mission = Mission::where('id', $dataRecord->mission_id)->first();
         $dataRecord->delete();
+        $this->updateMissionDetails($mission);
         return response()->json(['success' => 'Data record deleted successfully.']);
     }
 
-    public function missionFix(DataRecord $dataRecord)
-    {
-        $mission = Mission::find($dataRecord->mission_id);
 
-        $dataQuality = $dataRecord->data_quality;
-
-        // Aktualizácia počtov v misii
-        $mission->w -= 1;
-        if ($dataQuality == 0) {
-            $mission->z0 -= 1;
-        } elseif ($dataQuality == 1) {
-            $mission->z1 -= 1;
-        } elseif ($dataQuality == 2) {
-            $mission->z2 -= 1;
-        } elseif ($dataQuality == 3) {
-            $mission->zn -= 1;
-        }
-        $totalRecords = $mission->w;
-
-        if ($totalRecords > 0) {
-            $mission->p0 = (($mission->z0 + $mission->zn) / $totalRecords) * 100;
-            $mission->p1 = ($mission->z1 / $totalRecords) * 100;
-            $mission->p2 = ($mission->z2 / $totalRecords) * 100;
-        } else {
-            $mission->p0 = 0;
-            $mission->p1 = 0;
-            $mission->p2 = 0;
-        }
-
-        $mission->save();
-    }
     public function editAjax($id)
     {
         $dataRecord = DataRecord::findOrFail($id);
@@ -225,66 +195,34 @@ class DataRecordController extends Controller
 
     public function updateAjax(Request $request, $id)
     {
-        try {
-            $dataRecord = DataRecord::findOrFail($id);
-            Log::info('Update request data:', $request->all());
+        $dataRecord = DataRecord::findOrFail($id);
+        $dataQuality = $request->input('data_quality');
 
-            $dataQuality = $request->input('data_quality');
+        $dataRecord->data_quality = $dataQuality;
 
-            // Check if data_quality is null
-            if (is_null($dataQuality)) {
-                Log::info('data_quality is null');
-            } else {
-                Log::info('data_quality is not null', ['data_quality' => $dataQuality]);
-            }
+        // Save the record
+        $dataRecord->save();
+        $mission = Mission::where('id', $dataRecord->mission_id)->first();
+        $this->updateMissionDetails($mission);
 
-            // Log current state of the record before updating
-            Log::info('Current DataRecord:', $dataRecord->toArray());
-
-            // Update the data quality
-            $dataRecord->data_quality = $dataQuality;
-            Log::info('Data Quality to be updated:', ['data_quality' => $dataRecord->data_quality]);
-
-            // Save the record
-            $dataRecord->save();
-
-            // Log updated state of the record
-            Log::info('Updated DataRecord:', $dataRecord->toArray());
-
-            return response()->json(['success' => true]);
-        } catch (\Exception $e) {
-            // Log any exception that occurs
-            Log::error('Error updating DataRecord:', ['message' => $e->getMessage(), 'stack' => $e->getTraceAsString()]);
-
-            // Return a detailed error response
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'stack' => $e->getTraceAsString()
-            ], 500);
-        }
+        return response()->json(['success' => true]);
     }
 
-    public function updateMissionDetails($mission, $dataQuality)
+    public function updateMissionDetails($mission)
     {
-        $mission->w += 1; // Zvýšime celkový počet dátových záznamov
+        $dataRecords = DataRecord::where('mission_id', $mission->id)->get();
 
-        if ($dataQuality == 0) {
-            $mission->z0 += 1; // Neakceptované údaje
-        } elseif ($dataQuality == 1) {
-            $mission->z1 += 1; // Prijateľné údaje
-        } elseif ($dataQuality == 2) {
-            $mission->z2 += 1; // Vynikajúce údaje
-        } elseif ($dataQuality == 3) {
-            $mission->zn += 1; // Nezozbierané údaje (porucha)
-        }
+        $mission->w = $dataRecords->count();
+        $mission->z0 = $dataRecords->whereNotNull('data_quality')->where('data_quality', 0)->count();
+        $mission->z1 = $dataRecords->whereNotNull('data_quality')->where('data_quality', 1)->count();
+        $mission->z2 = $dataRecords->whereNotNull('data_quality')->where('data_quality', 2)->count();
+        $mission->zn = $dataRecords->whereNotNull('data_quality')->where('data_quality', 3)->count();
 
-        $totalRecords = $mission->w;
 
-        if ($totalRecords > 0) {
-            $mission->p0 = (($mission->z0 + $mission->zn) / $totalRecords) * 100;
-            $mission->p1 = ($mission->z1 / $totalRecords) * 100;
-            $mission->p2 = ($mission->z2 / $totalRecords) * 100;
+        if ($mission->w > 0) {
+            $mission->p0 = (($mission->z0 + $mission->zn) / $mission->w) * 100;
+            $mission->p1 = ($mission->z1 / $mission->w) * 100;
+            $mission->p2 = ($mission->z2 / $mission->w) * 100;
         } else {
             $mission->p0 = 0;
             $mission->p1 = 0;
