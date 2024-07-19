@@ -23,7 +23,7 @@ class DroneFactory extends Factory
         $types = ['IMAGE', 'SIGNAL', 'NUMBER'];
 
         return [
-            'name' => 'DRONE-' . strtoupper($this->faker->unique()->lexify('???')) . $this->faker->unique()->numerify('###'),
+            'name' => 'DRONE-' . strtoupper($this->faker->unique()->lexify('???')) . $this->faker->unique()->numerify('####'),
             'type' => $this->faker->randomElement($types),
             'serial_number' => $this->faker->unique()->numerify('SN############'),
         ];
