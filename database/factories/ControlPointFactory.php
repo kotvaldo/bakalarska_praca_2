@@ -27,18 +27,24 @@ class ControlPointFactory extends Factory
     public function withMissionId($missionId)
     {
         return $this->state(function (array $attributes) use ($missionId) {
+            $types = ['IMAGE', 'SIGNAL', 'NUMBER'];
             $droneId = null;
-            $data_type = $attributes['data_type'];
+            $data_type = $attributes['data_type'] ?? $this->faker->randomElement($types);
 
             if ($this->faker->boolean(25)) { // 25% pravdepodobnosť
                 $droneId = $this->getRandomDroneId($missionId);
-                $data_type = $droneId ? Drone::where('id', $droneId)->first()->data_type : $data_type;
+                if ($droneId) {
+                    $drone = Drone::find($droneId);
+                    if ($drone) {
+                        $data_type = $drone->data_type ?? $data_type;
+                    }
+                }
             }
 
             return [
                 'drone_id' => $droneId,
                 'mission_id' => $missionId,
-                'data_type' => $data_type,
+                'data_type' => $data_type ?? $this->faker->randomElement($types),
             ];
         });
     }
