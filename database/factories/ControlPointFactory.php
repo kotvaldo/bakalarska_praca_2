@@ -28,24 +28,18 @@ class ControlPointFactory extends Factory
     {
         return $this->state(function (array $attributes) use ($missionId) {
             $droneId = null;
-            $data_type = null;
+            $data_type = $attributes['data_type'];
+
             if ($this->faker->boolean(25)) { // 25% pravdepodobnosť
                 $droneId = $this->getRandomDroneId($missionId);
-                $data_type = Drone::where('id', $droneId)->first()->data_type;
-            }
-            if($droneId == null) {
-                return [
-                    'drone_id' => $droneId,
-                    'mission_id' => $missionId,
-                ];
-            } else {
-                return [
-                    'drone_id' => $droneId,
-                    'mission_id' => $missionId,
-                    'data_type' => $data_type,
-                ];
+                $data_type = $droneId ? Drone::where('id', $droneId)->first()->data_type : $data_type;
             }
 
+            return [
+                'drone_id' => $droneId,
+                'mission_id' => $missionId,
+                'data_type' => $data_type,
+            ];
         });
     }
 
